@@ -40,3 +40,4 @@ Route::prefix('admin')->group(function () {
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);
+    Route::post('/login', [UserController::class, 'login']);

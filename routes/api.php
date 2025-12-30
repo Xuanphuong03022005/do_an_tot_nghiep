@@ -5,6 +5,8 @@ use App\Http\Controllers\ADMIN\AdminAirpotsController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
 use App\Http\Controllers\ADMIN\AdminSeatController;
+use App\Http\Controllers\ADMIN\AdminUserController;
+use App\Http\Controllers\CLIENT\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UploadController;
 
@@ -32,4 +34,9 @@ Route::prefix('admin')->group(function () {
     //flight
     Route::post('/flight', [AdminFlightsController::class, 'store']);
     Route::get('/flights', [AdminFlightsController::class, 'index']);
+    //user
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::put('/users/{id}', [AdminUserController::class, 'update']);
 });
+    Route::post('/user', [UserController::class, 'store']);
+    Route::put('/user/{id}', [UserController::class, 'update']);

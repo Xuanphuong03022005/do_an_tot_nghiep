@@ -10,10 +10,11 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-   public function store(StoreUserRequest $request)
+    public function store(StoreUserRequest $request)
     {
         $validated = $request->validated();
 
@@ -64,5 +65,25 @@ class UserController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'Cập nhật người dùng thất bại.'], 500);
         }
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Thông tin đăng nhập không hợp lệ.'], 401);
+        }
+        $user->makeHidden(['password']);
+        return response()->json([
+            'message' => 'Đăng nhập thành công.',
+            'data' => [
+                'user' => $user
+            ]
+        ], 200);
     }
 }

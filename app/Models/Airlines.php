@@ -20,4 +20,7 @@ class Airlines extends Model
     public function seats(){
         return $this->hasMany(Seats::class, 'airline_id');
     }
+    public function flights(){
+        return $this->hasMany(Flights::class, 'airline_id');
+    }
 }

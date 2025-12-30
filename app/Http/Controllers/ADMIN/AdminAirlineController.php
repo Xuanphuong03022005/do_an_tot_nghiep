@@ -45,7 +45,6 @@ class AdminAirlineController extends Controller
 
     public function store(CreateAirlineRequest $request)
     {
-        
         DB::beginTransaction();
         $file = $request->file('image');
         $res = CloudinaryUpload::upload($file, 'airlines', 'airline');
@@ -61,6 +60,7 @@ class AdminAirlineController extends Controller
                     'seat_rows' => $request->input('seat_rows'),
                     'seat_per_row' => $request->input('seat_per_row'),
                 ]);
+                DB::commit();
                 return response()->json([
                     'message' => 'Thêm máy bay thành công.'
                 ], 200);
@@ -70,7 +70,6 @@ class AdminAirlineController extends Controller
                     'message' => 'Thêm máy bay thất bại.'
                 ], 500);
             }
-            DB::commit();
         } else {
             DB::rollBack();
             return response()->json([

@@ -8,9 +8,6 @@ use App\Http\Controllers\ADMIN\AdminSeatController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UploadController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
 Route::prefix('admin')->group(function () {
     //airline
     Route::post('/airline', [AdminAirlineController::class, 'store']);
@@ -34,4 +31,5 @@ Route::prefix('admin')->group(function () {
     Route::resource('airports', AdminAirpotsController::class);
     //flight
     Route::post('/flight', [AdminFlightsController::class, 'store']);
+    Route::get('/flights', [AdminFlightsController::class, 'index']);
 });

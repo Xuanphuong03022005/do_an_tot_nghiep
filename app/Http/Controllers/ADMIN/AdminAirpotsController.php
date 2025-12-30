@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ADMIN;
 
 use App\Http\Controllers\Controller;
+use App\Models\Airlines;
 use App\Models\Airports;
 use Exception;
 use Illuminate\Http\Request;
@@ -24,7 +25,6 @@ class AdminAirpotsController extends Controller
     }
     public function store(Request $request)
     {
-       
         try {
             $airpots = Airports::create([
                 'name' => $request->input('name'),

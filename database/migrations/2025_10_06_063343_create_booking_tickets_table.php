@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('flight_id')->references('id')->on('flights')->onDelete('cascade');
+
             $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
             $table->foreign('passenger_id')->references('id')->on('passengers')->onDelete('cascade');
             $table->foreign('ticket_id')->references('id')->on('tickets');

@@ -25,6 +25,7 @@ class CreateFlightRequest extends FormRequest
             'airline_id' => 'required|exists:airlines,id',
             'departure_airport_id' => 'required|exists:airports,id',
             'arrival_airport_id'  => 'required|exists:airports,id|different:departure_airport_id',
+
             // Outbound flight: required and must contain nested fields
             'outbound_flight' => 'required|array',
             'outbound_flight.departure_time' => 'required|date|after:now',
@@ -75,7 +76,6 @@ class CreateFlightRequest extends FormRequest
             'outbound_flight.seat_classes.*.id' => 'required|exists:seat_classes,id',
             'outbound_flight.seat_classes.*.price' => 'required|numeric|min:1',
 
-            // Return flights removed — controller only creates outbound flights
         ];
     }
 
@@ -85,7 +85,7 @@ class CreateFlightRequest extends FormRequest
     public function messages(): array
     {
         return [
-            
+
             'airline_id.required' => 'Vui lòng chọn hãng hàng không.',
             'airline_id.exists' => 'Hãng hàng không không tồn tại.',
 
@@ -95,24 +95,23 @@ class CreateFlightRequest extends FormRequest
             'arrival_airport_id.exists' => 'Sân bay đến không tồn tại.',
             'arrival_airport_id.different' => 'Sân bay đi và sân bay đến không được trùng nhau.',
 
-            'outbound_flight.departure_time.required' => 'Vui lòng truyền thời gian khởi hành.',
-            'outbound_flight.departure_time.date' => 'Thời gian khởi hành không hợp lệ.',
-            'outbound_flight.departure_time.after' => 'Thời gian khởi hành phải lớn hơn thời gian hiện tại.',
+            'departure_time.required' => 'Vui lòng truyền thời gian khởi hành.',
+            'departure_time.date' => 'Thời gian khởi hành không hợp lệ.',
+            'departure_time.after' => 'Thời gian khởi hành phải lớn hơn thời gian hiện tại.',
 
-            'outbound_flight.arrival_time.required' => 'Vui lòng truyền thời gian đến.',
-            'outbound_flight.arrival_time.date' => 'Thời gian đến không hợp lệ.',
+            'arrival_time.required' => 'Vui lòng truyền thời gian đến.',
+            'arrival_time.date' => 'Thời gian đến không hợp lệ.',
 
-            'outbound_flight.seat_classes.required' => 'Bắt buộc phải có ít nhất một hạng ghế.',
-            'outbound_flight.seat_classes.array' => 'Danh sách hạng ghế phải là mảng.',
-            'outbound_flight.seat_classes.min' => 'Phải có ít nhất một hạng ghế.',
+            'seat_classes.required' => 'Bắt buộc phải có ít nhất một hạng ghế.',
+            'seat_classes.array' => 'Danh sách hạng ghế phải là mảng.',
+            'seat_classes.min' => 'Phải có ít nhất một hạng ghế.',
 
-            'outbound_flight.seat_classes.*.id.required' => 'Bắt buộc phải chọn hạng ghế.',
-            'outbound_flight.seat_classes.*.id.exists' => 'Hạng ghế không tồn tại.',
+            'seat_classes.*.id.required' => 'Bắt buộc phải chọn hạng ghế.',
+            'seat_classes.*.id.exists' => 'Hạng ghế không tồn tại.',
 
-            'outbound_flight.seat_classes.*.price.required' => 'Bắt buộc phải nhập giá cho hạng ghế.',
-            'outbound_flight.seat_classes.*.price.numeric' => 'Giá phải là số.',
-            'outbound_flight.seat_classes.*.price.min' => 'Giá phải lớn hơn 0.',
-
+            'seat_classes.*.price.required' => 'Bắt buộc phải nhập giá cho hạng ghế.',
+            'seat_classes.*.price.numeric' => 'Giá phải là số.',
+            'seat_classes.*.price.min' => 'Giá phải lớn hơn 0.',
         ];
     }
 }

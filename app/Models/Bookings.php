@@ -20,4 +20,5 @@ class Bookings extends Model
     {
         return $this->belongsTo(RoundTrip::class, 'round_trip_id');
     }
+
 }

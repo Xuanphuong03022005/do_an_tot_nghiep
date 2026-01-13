@@ -33,6 +33,7 @@ class AdminFlightsController extends Controller
     }
 
     /**
+<<<<<<< HEAD
      * Get flights that intersect a given time range.
      * Query params: `start` (datetime, required), `end` (datetime, required)
      */
@@ -75,6 +76,8 @@ class AdminFlightsController extends Controller
    
 
     /**
+=======
+>>>>>>> 30ff7537ba3ff7a33da3dea46a461823cc61cf53
      * Apply start/end time range filtering to a Flights query builder.
      * Filters flights that start or end inside the range or fully cover the range.
      *

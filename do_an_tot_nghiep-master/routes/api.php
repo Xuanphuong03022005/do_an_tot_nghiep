@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ADMIN\AdminAirlineController;
-use App\Http\Controllers\ADMIN\AdminAirpotsController;
+use App\Http\Controllers\ADMIN\AdminAirportsController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;

@@ -14,7 +14,6 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
-use RoundingMode;
 
 class AdminFlightsController extends Controller
 {
@@ -32,64 +31,9 @@ class AdminFlightsController extends Controller
         }
     }
 
-    /**
-<<<<<<< HEAD
-     * Get flights that intersect a given time range.
-     * Query params: `start` (datetime, required), `end` (datetime, required)
-     */
-    public function flightsInRange(Request $request)
-    {
-        $request->validate([
-            'start' => 'required|date',
-            'end' => 'required|date|after:start',
-        ]);
-
-        try {
-            $start = Carbon::parse($request->start);
-            $end = Carbon::parse($request->end);
-
-            $flights = Flights::with(['airline:id,name', 'departureAirport:id,name', 'arrivalAirport:id,name'])
-                ->where(function ($q) use ($start, $end) {
-                    // departure inside range
-                    $q->whereBetween('departure_time', [$start, $end])
-                      // arrival inside range
-                      ->orWhereBetween('arrival_time', [$start, $end])
-                      // or flight fully covers the range
-                      ->orWhere(function ($q2) use ($start, $end) {
-                          $q2->where('departure_time', '<=', $start)
-                             ->where('arrival_time', '>=', $end);
-                      });
-                })
-                ->orderBy('departure_time', 'asc')
-                ->get();
-
-            return response()->json(['message' => 'Chuyến bay trong khoảng thời gian', 'data' => $flights], 200);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'Lấy chuyến bay theo khoảng thời gian thất bại.'], 500);
-        }
-    }
-
-    /**
-     * Get flights that have bookings (used as "phản hồi"/responses).
-     * Optional query param: `has_bookings` true/false (defaults to true)
-     */
-   
-
-    /**
-=======
->>>>>>> 30ff7537ba3ff7a33da3dea46a461823cc61cf53
-     * Apply start/end time range filtering to a Flights query builder.
-     * Filters flights that start or end inside the range or fully cover the range.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string|null $start
-     * @param string|null $end
-     * @return void
-     */
     public function store(CreateFlightRequest $request)
     {
         $data = $request->all();
-        $data['type'] = 1;
         DB::beginTransaction();
         try {
             $outbound = $data['outbound_flight'];
@@ -121,6 +65,7 @@ class AdminFlightsController extends Controller
                 'arrival_time'  => $outbound['arrival_time'],
                 'flight_number'  => $departureAirportCode->code . '-' . $arrivalAirportCode->code . '-' . now()->timestamp,
             ]);
+
 
             $seats = Seats::where('airline_id',  $data['airline_id'])
                 ->where('status', 'usable')

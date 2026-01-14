@@ -22,7 +22,6 @@ class CreateFlightRequest extends FormRequest
     {
         return [
             'airline_id' => 'required|exists:airlines,id',
-
             'departure_airport_id' => 'required|exists:airports,id',
             'arrival_airport_id'  => 'required|exists:airports,id|different:departure_airport_id',
 
@@ -66,8 +65,11 @@ class CreateFlightRequest extends FormRequest
                 }
             ],
 
-            'seat_classes.*.id' => 'required|exists:seat_classes,id',
-            'seat_classes.*.price' => 'required|numeric|min:1',
+
+            'outbound_flight.seat_classes.*.id' => 'required|exists:seat_classes,id',
+            'outbound_flight.seat_classes.*.price' => 'required|numeric|min:1',
+
+
         ];
     }
 
@@ -77,6 +79,9 @@ class CreateFlightRequest extends FormRequest
     public function messages(): array
     {
         return [
+
+
+
             'airline_id.required' => 'Vui lòng chọn hãng hàng không.',
             'airline_id.exists' => 'Hãng hàng không không tồn tại.',
 

@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\ADMIN\AdminAirlineController;
-use App\Http\Controllers\ADMIN\AdminAirportsController;
+use App\Http\Controllers\ADMIN\AdminAirpotsController;
+use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
 use App\Http\Controllers\ADMIN\AdminSeatController;
-use App\Http\Controllers\ADMIN\AdminAuthController;
+use App\Http\Controllers\ADMIN\AdminUserController;
+use App\Http\Controllers\CLIENT\TicketController;
+use App\Http\Controllers\CLIENT\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UploadController;
 
@@ -41,5 +44,21 @@ Route::prefix('admin')->group(function () {
     //flight
     Route::post('/flight', [AdminFlightsController::class, 'store']);
     Route::get('/flights', [AdminFlightsController::class, 'index']);
-  
+
+    //user
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::put('/users/{id}', [AdminUserController::class, 'update']);
+    //baggage rules
+    Route::post('baggage-rules',[AdminBaggageRuleController::class, 'store']);
+    Route::get('baggage-rules',[AdminBaggageRuleController::class, 'index']);
+    Route::put('baggage-rules/{id}',[AdminBaggageRuleController::class, 'update']);
+    Route::delete('baggage-rules/{id}',[AdminBaggageRuleController::class, 'destroy']);
+    Route::get('baggage-rules/{id}',[AdminBaggageRuleController::class, 'show']);
+    Route::get('baggage-rules-by-class/{id}',[AdminBaggageRuleController::class, 'getByClass']);
+
 });
+    Route::post('/user', [UserController::class, 'store']);
+    Route::put('/user/{id}', [UserController::class, 'update']);
+    Route::post('/login', [UserController::class, 'login']);
+    Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/{id}', [TicketController::class, 'show']);

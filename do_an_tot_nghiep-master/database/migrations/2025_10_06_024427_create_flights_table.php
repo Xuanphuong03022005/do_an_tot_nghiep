@@ -12,10 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('flights', function (Blueprint $table) {
+<<<<<<< HEAD:do_an_tot_nghiep-master/database/migrations/2025_10_06_024427_create_flights_table.php
             $table->id();
             $table->unsignedBigInteger('airline_id');
             $table->unsignedBigInteger('departure_airport_id');
             $table->unsignedBigInteger('arrival_airport_id');
+=======
+            $table->id();           
+            $table->unsignedBigInteger('airline_id');
+            $table->unsignedBigInteger('departure_airport_id');
+            $table->unsignedBigInteger('arrival_airport_id');
+
+>>>>>>> origin/master:database/migrations/2025_10_06_024427_create_flights_table.php
             $table->time('departure_time');
             $table->time('arrival_time');
             $table->string('flight_number');

@@ -14,17 +14,17 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('flight_id');
             $table->string('pnr_code');
             $table->string('status');
+            $table->unsignedBigInteger('round_trip_id')->nullable();
             $table->integer('total_amount');
             $table->unsignedBigInteger('discount_id')->nullable();
             $table->integer('discount_value')->nullable();
             $table->integer('total_final');
             $table->timestamps();
             $table->softDeletes();
+            $table->foreign('round_trip_id')->references('id')->on('round_trips')->onDelete('cascade');
             $table->foreign('discount_id')->references('id')->on('discounts');
-            $table->foreign('flight_id')->references('id')->on('flights');
             $table->foreign('user_id')->references('id')->on('users');
         });
     }

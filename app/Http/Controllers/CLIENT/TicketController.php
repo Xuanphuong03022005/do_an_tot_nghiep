@@ -43,8 +43,6 @@ class TicketController extends Controller
         }
     }
     
-   
-    
     public function show($id)
     {
         $ticket = Tickets::select(

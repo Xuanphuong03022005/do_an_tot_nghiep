@@ -60,6 +60,7 @@ class AdminFlightsController extends Controller
             $flight = Flights::create([
                 'airline_id' => $data['airline_id'],
                 'departure_airport_id'  => $data['departure_airport_id'],
+                'free_baggage_kg'  => $data['free_baggage_kg'] ?? 0,
                 'arrival_airport_id'  => $data['arrival_airport_id'],
                 'departure_time'  => $outbound['departure_time'],
                 'arrival_time'  => $outbound['arrival_time'],
@@ -117,7 +118,7 @@ class AdminFlightsController extends Controller
             DB::rollBack();
             return response()->json(
                 [
-                    'message' => 'Thêm chuyến bay thất bại.' . $e
+                    'message' => 'Thêm chuyến bay thất bại.'
                 ],
                 500
             );

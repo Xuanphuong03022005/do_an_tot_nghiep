@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->date('birthday');
             $table->string('email')->nullable();
+            $table->enum('type', ['ADT','CHD','INF']); 
             $table->enum('identity_type', ['CCCD', 'Passport', 'birth_certificate'])->default('CCCD'); 
             $table->string('identity_number');
             $table->timestamps();

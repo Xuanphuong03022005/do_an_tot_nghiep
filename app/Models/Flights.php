@@ -15,6 +15,7 @@ class Flights extends Model
         'departure_time',
         'arrival_time',
         'flight_number',
+        'free_baggage_kg',
     ];
     public function airline()
     {

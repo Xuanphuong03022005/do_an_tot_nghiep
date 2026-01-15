@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('arrival_airport_id');
 
             $table->time('departure_time');
+            $table->integer('free_baggage_kg');
             $table->time('arrival_time');
             $table->string('flight_number');
             $table->timestamps();

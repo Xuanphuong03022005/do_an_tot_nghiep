@@ -11,7 +11,7 @@ class BookingTickets extends Model
         'ticket_id',
         'passenger_id',
         'flight_id',
-        'seat_code',
+        'class_id',
         'type',
        
     ];

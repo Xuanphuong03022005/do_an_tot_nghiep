@@ -11,7 +11,8 @@ class Passengers extends Model
         'gender',
         'phone',
         'email',
+        'type',
         'identity_type',
-        'identity_number'
+        'identity_number',
     ];
 }

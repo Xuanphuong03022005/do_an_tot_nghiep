@@ -5,6 +5,7 @@ namespace App\Http\Controllers\CLIENT;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreBookingRequest;
+use App\Models\Baggages;
 use Illuminate\Support\Facades\DB;
 use App\Models\Bookings;
 use App\Models\BookingTickets;
@@ -57,99 +58,89 @@ class BookingController extends Controller
         ]], 200);
     }
 
-                                                                                                                                                                                                                                                      
     public function store(StoreBookingRequest $request)
     {
-        $validated = $request->validated();
-        // Support one-way (flight_id) and round-trip (outbound_flight_id + return_flight_id)
-        $isRound = !empty($validated['outbound_flight_id']) && !empty($validated['return_flight_id']);
-
         DB::beginTransaction();
-        try {
-            $totalAmount = 0;
-
-            // First pass: check availability and ticket <-> flight consistency
-            foreach ($validated['tickets'] as $t) {
-                $ticket = Tickets::lockForUpdate()->find($t['ticket_id']);
-                if (!$ticket) throw new Exception('Ticket không tồn tại.');
-
-                // Determine expected flight id for this ticket
-                $expectedFlight = null;
-                if ($isRound) {
-                    if (empty($t['type'])) {
-                        throw new Exception('Thiếu trường `type` cho vé trong đặt khứ hồi.');
-                    }
-                    $expectedFlight = $t['type'] === 'return' ? $validated['return_flight_id'] : $validated['outbound_flight_id'];
-                } else {
-                    $expectedFlight = $validated['flight_id'] ?? null;
-                }
-
-                if ($expectedFlight && $ticket->flight_id != $expectedFlight) {
-                    return response()->json(['message' => "Ticket id {$ticket->id} không thuộc flight id {$expectedFlight}."], 400);
-                }
-
-                $need = count($t['passengers']);
-                if ($ticket->available_seats < $need) {
-                    return response()->json(['message' => 'Không đủ ghế cho ticket id ' . $ticket->id], 400);
-                }
-                $totalAmount += $ticket->price * $need;
-            }
-
-            // Create round trip record if needed
-            $roundTripId = null;
-            if ($isRound) {
-                $rt = RoundTrip::create();
-                $roundTripId = $rt->id;
-            }
-
-            // Create booking (note: bookings table stores round_trip_id; flight_id column may not exist)
+        do {
             $pnr = strtoupper(Str::random(6));
-            $bookingId = DB::table('bookings')->insertGetId([
-                'user_id' => $validated['user_id'] ?? null,
-                'pnr_code' => $pnr . now(),
-                'status' => 'booked',
-                'round_trip_id' => $roundTripId,
-                'total_amount' => $totalAmount,
-                'discount_id' => null,
-                'discount_value' => null,
-                'total_final' => $totalAmount
+        } while (Bookings::where('pnr_code', $pnr)->exists());
+        try {
+            $data = $request->all();
+            $booking = Bookings::create([
+                'user_id' => $data['user_id'],
+                'pnr_code' => $pnr,
+                'status' => 'ticketed',
+                'total_amount' => $data['total_amount'],
+                'discount_id' => $data['discount_id'],
+                'discount_value' => $data['discount_value'],
+                'total_final' => $data['total_final'],
             ]);
-
-            // Create passengers and booking_tickets, decrement tickets.available_seats
-            foreach ($validated['tickets'] as $t) {
-                $ticket = Tickets::lockForUpdate()->find($t['ticket_id']);
-                foreach ($t['passengers'] as $pData) {
-                    $passengerId = DB::table('passengers')->insertGetId([
-                        'name' => $pData['name'],
-                        'gender' => $pData['gender'],
-                        'birthday' => $pData['birthday'] ?? null,
-                        'phone' => $pData['phone'] ?? null,
-                        'email' => $pData['email'] ?? null,
-                        'identity_type' => $pData['identity_type'] ?? null,
-                        'identity_number' => $pData['identity_number'] ?? null
+            foreach ($data['tickets'] as $value) {
+                $passengers = $value['passengers'];
+                foreach ($passengers as $passenger) {
+                    $dataPassenger = Passengers::create([
+                        'name' => $passenger['name'],
+                        'gender' => $passenger['gender'],
+                        'phone' => $passenger['phone'],
+                        'email' => $passenger['email'],
+                        'type' => $passenger['type'],
+                        'identity_type' => $passenger['identity_type'],
+                        'identity_number' => $passenger['identity_number'],
                     ]);
-
-                    DB::table('booking_tickets')->insert([
-                        'booking_id' => $bookingId,
-                        'ticket_id' => $ticket->id,
-                        'passenger_id' => $passengerId,
-                        'flight_id' => $ticket->flight_id,
-                        'seat_code' => $pData['seat_code'] ?? null,
-                        'type' => $t['type'] ?? 'outbound',
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                    $bookingTicketOutbound = BookingTickets::create([
+                        'booking_id' => $booking->id,
+                        'ticket_id' => $value['ticket_id'],
+                        'passenger_id' => $dataPassenger->id,
+                        'flight_id' => $data['outbound_flight_id'],
+                        'class_id' => $value['class_id'],
+                        'type' => 'outbound'
                     ]);
-                    // decrement
-                    DB::table('tickets')->where('id', $ticket->id)->decrement('available_seats', 1);
+                    $ticketOutbound = Tickets::where('flight_id', $data['outbound_flight_id'])->first();
+                    $ticketOutbound->update([
+                        'available_seats' => $ticketOutbound->available_seats - 1
+                        ]);
+                    if ($data['return_flight_id']) {
+                        $ticketReturn = Tickets::where('flight_id', $data['return_flight_id'])->first();
+                        $bookingTicketReturn = BookingTickets::create([
+                            'booking_id' => $booking->id,
+                            'ticket_id' => $ticketReturn->id,
+                            'passenger_id' => $dataPassenger->id,
+                            'flight_id' => $data['return_flight_id'],
+                            'class_id' => $value['class_id'],
+                            'type' => 'return'
+                        ]);
+                        $ticketReturn->update([
+                        'available_seats' => $ticketReturn->available_seats - 1
+                    ]);
+                    }
+                    $bookingTicketId = $bookingTicketOutbound->id;
+
+                    if (!empty($passenger['baggage'])) {
+                        foreach ($passenger['baggage'] as $item) {
+                            $bookingTicketId = $bookingTicketOutbound->id;
+                            if (
+                                $item['flight_type'] === 'return'
+                                && isset($bookingTicketReturn)
+                            ) {
+                                $bookingTicketId = $bookingTicketReturn->id;
+                            }
+
+                            Baggages::create([
+                                'booking_ticket_id' => $bookingTicketId,
+                                'type' => $item['type'],
+                                'weight' => $item['weight'],
+                                'price' => $item['price'],
+                                'note' => $item['note'] ?? null
+                            ]);
+                        }
+                    }
                 }
+                DB::commit();
+                return response()->json(['message' => 'Đặt chỗ thành công.', 'data' => [$booking->pnr_code]], 200);
             }
-
-            DB::commit();
-            $booking = DB::table('bookings')->where('id', $bookingId)->first();
-            return response()->json(['message' => 'Đặt chỗ thành công.', 'data' => $booking], 200);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Đặt chỗ thất bại: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Đặt chỗ thất bại. ' . $e->getMessage()], 500);
         }
     }
 }

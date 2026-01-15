@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ticket_id');
             $table->unsignedBigInteger('passenger_id');
             $table->unsignedBigInteger('flight_id');
-            $table->string('seat_code');
+            $table->string('class_id');
             $table->string('type')->enum('outbound','return');
             $table->timestamps();
             $table->softDeletes();
@@ -26,6 +26,7 @@ return new class extends Migration
             $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
             $table->foreign('passenger_id')->references('id')->on('passengers')->onDelete('cascade');
             $table->foreign('ticket_id')->references('id')->on('tickets');
+            $table->foreign('class_id')->references('id')->on('seat_classes')->onDelete('cascade');
         });
     }
 

@@ -15,15 +15,24 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('pnr_code');
-            $table->string('status');
-            $table->unsignedBigInteger('round_trip_id')->nullable();
+            $table->enum('status', [
+                'draft',
+                'pending_payment',
+                'paid',
+                'ticketed',
+                'completed',
+                'cancelled',
+                'expired',
+                'failed'
+            ]);
+            // $table->unsignedBigInteger('round_trip_id')->nullable();
             $table->integer('total_amount');
             $table->unsignedBigInteger('discount_id')->nullable();
             $table->integer('discount_value')->nullable();
             $table->integer('total_final');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('round_trip_id')->references('id')->on('round_trips')->onDelete('cascade');
+            // $table->foreign('round_trip_id')->references('id')->on('round_trips')->onDelete('cascade');
             $table->foreign('discount_id')->references('id')->on('discounts');
             $table->foreign('user_id')->references('id')->on('users');
         });

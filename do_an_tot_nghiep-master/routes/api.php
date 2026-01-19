@@ -7,7 +7,11 @@ use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
 use App\Http\Controllers\ADMIN\AdminSeatController;
 use App\Http\Controllers\ADMIN\AdminUserController;
+<<<<<<< HEAD:do_an_tot_nghiep-master/routes/api.php
 use App\Http\Controllers\ADMIN\AdminTicketController;
+=======
+use App\Http\Controllers\CLIENT\BookingController;
+>>>>>>> 7feb266a9785fec71e83211d8bf5933ec6d3bc4a:routes/api.php
 use App\Http\Controllers\CLIENT\TicketController;
 use App\Http\Controllers\CLIENT\UserController;
 use Illuminate\Support\Facades\Route;
@@ -69,4 +73,11 @@ Route::prefix('admin')->group(function () {
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);
     Route::post('/login', [UserController::class, 'login']);
+<<<<<<< HEAD:do_an_tot_nghiep-master/routes/api.php
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
+=======
+    Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/{id}', [TicketController::class, 'show']);
+    //booking
+    Route::post('/booking', [BookingController::class, 'store']);
+>>>>>>> 7feb266a9785fec71e83211d8bf5933ec6d3bc4a:routes/api.php

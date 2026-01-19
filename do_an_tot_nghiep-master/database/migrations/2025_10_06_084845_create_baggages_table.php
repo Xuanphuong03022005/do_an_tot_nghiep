@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('booking_ticket_id');
             $table->enum('type', ['carry_on', 'checked'])->default('carry_on');
             $table->decimal('weight', 10, 2);
-             $table->string('size')->nullable();
             $table->integer('price')->default(0);
              $table->string('note')->nullable();
             $table->timestamps();

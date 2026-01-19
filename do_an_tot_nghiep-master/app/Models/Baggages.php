@@ -10,7 +10,6 @@ class Baggages extends Model
         'booking_ticket_id',
         'type',
         'weight',
-        'size',
         'price',
         'note',
     ];

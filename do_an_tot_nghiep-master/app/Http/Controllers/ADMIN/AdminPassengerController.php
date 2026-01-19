@@ -26,22 +26,6 @@ class AdminPassengerController extends Controller
         }
     }
 
-    public function store(StorePassengerRequest $request)
-    {
-        try {
-            $passenger = Passengers::create($request->validated());
-
-            return response()->json([
-                'message' => 'Tạo hành khách thành công.',
-                'data' => $passenger,
-            ], 201);
-        } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Tạo hành khách thất bại.'
-            ], 500);
-        }
-    }
-
     public function show($id)
     {
         try {

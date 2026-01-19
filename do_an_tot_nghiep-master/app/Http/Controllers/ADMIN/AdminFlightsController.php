@@ -116,29 +116,27 @@ public function destroy($id)
 {
     DB::beginTransaction();
     try {
-        // 1. Tìm chuyến bay
         $flight = Flights::find($id);
 
         if (!$flight) {
             return response()->json(['message' => 'Không tìm thấy chuyến bay'], 404);
         }
 
-        // 2. Xóa các bản ghi ở bảng seat_flights (bảng này có flight_id)
+        // 1. Xóa dữ liệu ở bảng seat_flights (bảng này chắc chắn có flight_id)
+        // Dùng forceDelete để xóa vĩnh viễn, tránh xung đột SoftDelete
         SeatFlights::where('flight_id', $id)->forceDelete();
 
-        // 3. Xóa ở bảng tickets 
-        // LƯU Ý: Vì bảng tickets của bạn thiếu cột flight_id, 
-        // tạm thời ta chỉ xóa chuyến bay để tránh lỗi treo hệ thống.
-        // Tickets::where('flight_id', $id)->forceDelete(); // Dòng này đang gây lỗi nên tạm ẩn
-
-        // 4. Xóa chính chuyến bay đó
+        // 2. Tạm thời bỏ qua việc xóa ở bảng tickets vì thiếu cột flight_id 
+        // để tránh lỗi SQLSTATE[42S22]: Column not found
+        
+        // 3. Xóa chính chuyến bay
         $flight->forceDelete();
 
         DB::commit();
         return response()->json(['message' => 'Xóa chuyến bay thành công'], 200);
     } catch (\Exception $e) {
         DB::rollBack();
-        return response()->json(['message' => 'Lỗi SQL: ' . $e->getMessage()], 500);
+        return response()->json(['message' => 'Lỗi xử lý: ' . $e->getMessage()], 500);
     }
 }
     public function PriceSeatBySeatclasses($seatClassesId, $array)

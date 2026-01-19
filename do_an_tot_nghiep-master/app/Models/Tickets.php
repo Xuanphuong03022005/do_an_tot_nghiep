@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tickets extends Model
 {
-    // use SoftDeletes;
+    use SoftDeletes;
 protected $fillable = [
     'airline_id',
     'class_id',

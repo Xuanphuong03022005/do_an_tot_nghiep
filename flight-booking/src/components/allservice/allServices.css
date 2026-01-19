@@ -1,0 +1,523 @@
+/* src/components/AllServices/AllServices.css */
+
+/* --- BIẾN CỤC BỘ (Giả định được kế thừa hoặc định nghĩa lại) --- */
+:root {
+  /* Dùng biến chung từ form.css nếu có, hoặc định nghĩa lại */
+  --secondary-color: #008744;
+  --border-color: #e0e0e0;
+  --white: #ffffff;
+  --primary-color: #004c99;
+  /* Màu cho các trạng thái ghế */
+  --sv-seat-available: #e0e0e0;
+  --sv-seat-xl: #ccf2ff;
+  --sv-seat-occupied: #a0a0a0;
+  --sv-seat-selected: #008744;
+}
+
+/* Tiêu đề phụ (Dùng cho các dịch vụ con) */
+.section-sub-title {
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Thông tin giá trong dịch vụ */
+.sv-price-info {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ff6600;
+  margin: 10px 0 20px;
+  text-align: center;
+}
+
+/* === 1. INSURANCE SERVICE (sv-insurance) === */
+.sv-insurance-section {
+  /* Style riêng cho bảo hiểm nếu cần */
+}
+.sv-insurance-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sv-insurance-options label {
+  font-weight: normal;
+  font-size: 1em;
+  margin-top: 0;
+}
+
+/* === 2. BAGGAGE SERVICE (sv-baggage) === */
+.sv-baggage-section p {
+  margin-bottom: 5px;
+}
+.sv-baggage-section select {
+  margin-bottom: 15px;
+}
+.sv-baggage-section .secondary-btn {
+  display: block;
+  margin-left: auto;
+  width: fit-content;
+}
+
+/* === 3. SEAT SELECTION STYLING (sv-seatmap) === */
+
+.sv-seatmap-section {
+  padding: 30px;
+  text-align: center;
+}
+
+.sv-seat-map-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* Chú giải */
+.sv-seat-map-legend {
+  flex: 0 0 35%;
+  max-width: 250px;
+  padding: 15px;
+  border-right: 1px solid var(--border-color);
+  text-align: left;
+}
+.sv-legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+.sv-legend-box {
+  width: 25px;
+  height: 25px;
+  border-radius: 4px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #444;
+  border: 1px solid #ccc;
+}
+/* Màu cho các loại ghế trong Chú giải */
+.sv-legend-box.sv-seat-xl {
+  background-color: var(--sv-seat-xl);
+  border-color: #99e0ff;
+}
+.sv-legend-box.sv-seat-standard {
+  background-color: var(--sv-seat-available);
+  border-color: #ccc;
+}
+.sv-legend-box.sv-seat-occupied {
+  background-color: var(--sv-seat-occupied);
+  border-color: #888;
+}
+.sv-legend-box.sv-seat-selected {
+  background-color: var(--sv-seat-selected);
+  color: var(--white);
+  border-color: var(--sv-seat-selected);
+}
+.sv-legend-box.sv-seat-restroom {
+  background-color: #f0f0f0;
+  border-color: #ddd;
+}
+
+/* Khu vực Sơ đồ Máy bay */
+.sv-map-area {
+  flex: 1;
+  max-width: 450px;
+  text-align: center;
+}
+.sv-aircraft-info {
+  font-size: 0.9em;
+  color: #888;
+  margin-bottom: 15px;
+}
+.sv-section-label {
+  font-weight: bold;
+  margin: 20px 0 10px;
+}
+
+/* Cấu trúc hàng ghế */
+.sv-seat-columns {
+  display: grid;
+  grid-template-columns: 20px repeat(3, 1fr) 30px repeat(3, 1fr);
+  gap: 2px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 0.8em;
+  color: #555;
+  padding-left: 20px;
+}
+.sv-seat-row {
+  display: grid;
+  grid-template-columns: 20px repeat(3, 1fr) 30px repeat(3, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.sv-row-number {
+  grid-column: 1 / 2;
+  font-size: 0.8em;
+  font-weight: bold;
+  line-height: 30px;
+  text-align: right;
+  padding-right: 5px;
+}
+
+/* Định dạng từng ghế */
+.sv-seat {
+  width: 100%;
+  height: 30px;
+  border-radius: 4px;
+  background-color: var(--sv-seat-available);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  border: 1px solid #ccc;
+  transition: background-color 0.1s;
+}
+.sv-seat:hover:not(.sv-seat-occupied) {
+  background-color: #d0e0ff;
+}
+
+/* Trạng thái ghế */
+.sv-seat-xl {
+  background-color: var(--sv-seat-xl);
+  border-color: #99e0ff;
+}
+.sv-seat-selected {
+  background-color: var(--sv-seat-selected);
+  color: var(--white);
+  border-color: var(--sv-seat-selected);
+}
+.sv-seat-occupied {
+  background-color: var(--sv-seat-occupied);
+  cursor: not-allowed;
+  border-color: #888;
+}
+.sv-seat-restroom {
+  background-color: #f0f0f0;
+  cursor: default;
+  font-size: 1.5em;
+  border-color: #ddd;
+}
+.sv-seat-empty {
+  visibility: hidden;
+  border: none;
+  background-color: transparent;
+}
+
+/* Lối đi */
+.sv-aisle-spacer {
+  grid-column: 5 / 6;
+  background-color: transparent;
+}
+
+/* Trạng thái lựa chọn */
+.sv-selection-status {
+  margin-top: 20px;
+  font-size: 1em;
+  color: #555;
+}
+.sv-selection-status strong {
+  color: var(--primary-color);
+}
+
+/* paymentrv */
+/* src/pages/PaymentReview.css */
+
+.payment-review-page-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.main-content-area {
+  padding-bottom: 150px; /* Để chừa chỗ cho khối summary cố định */
+}
+
+.section-header {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  padding-left: 15px;
+  border-left: 4px solid #4caf50;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 30px 0;
+}
+
+/* Review.css */
+.review-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Flight Review */
+.flight-route-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+
+.route-header {
+  font-size: 1rem;
+  color: #004d40;
+  margin-bottom: 5px;
+  margin-right: 30px;
+}
+
+.itinerary-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.base-price-total {
+  text-align: right;
+  font-size: 1.1rem;
+  margin-top: 15px;
+  color: #4caf50;
+}
+
+/* Passenger Review */
+.passenger-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.passenger-icon {
+  font-size: 2rem;
+  margin-right: 15px;
+}
+
+.passenger-details p {
+  margin: 2px 0;
+  font-size: 0.95rem;
+}
+
+.checkmark {
+  color: #4caf50;
+  font-weight: bold;
+  margin-right: 5px;
+}
+/* pmsumary */
+/* src/components/PaymentReview/PaymentSummaryBlock.css */
+
+.payment-summary-block {
+  position: fixed; /* Cố định khối này ở cuối màn hình */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-top: 2px solid #ddd;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px 5%; /* Điều chỉnh padding cho phù hợp với màn hình */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+}
+
+.summary-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.total-price-label {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.total-price-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #4caf50; /* Màu xanh lá cây */
+  margin-left: 10px;
+}
+
+.price-caption {
+  font-size: 0.8rem;
+  color: #777;
+  margin: 5px 0;
+}
+
+.price-caption a,
+.policy-links a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.policy-links {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 5px;
+}
+
+.confirm-payment-btn {
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.confirm-payment-btn:hover {
+  background-color: #45a049;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .payment-summary-block {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+  }
+
+  .confirm-payment-btn {
+    width: 100%;
+    margin-top: 15px;
+  }
+
+  .summary-details {
+    text-align: center;
+    width: 100%;
+  }
+
+  .total-price-label {
+    font-size: 1.1rem;
+  }
+
+  .total-price-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* src/components/PaymentReview/Review.css */
+
+.review-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+.section-header {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #004d40; /* Màu xanh đậm của Bamboo */
+  margin-bottom: 20px;
+  border-left: 5px solid #4caf50;
+  padding-left: 10px;
+}
+
+/* Flight Review Styles (Dữ liệu giả định) */
+.flight-route-card {
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  background-color: #f7fcfc;
+}
+
+.route-header strong {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.itinerary-detail {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 10px;
+}
+
+.itinerary-detail span {
+  margin-right: 15px;
+}
+
+.fare-class {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.flight-info {
+  margin-top: 8px;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.base-price-total {
+  text-align: right;
+  font-size: 1.2rem;
+  margin-top: 20px;
+  font-weight: 600;
+  color: #4caf50;
+}
+
+/* Passenger Review Styles */
+.passenger-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.passenger-icon {
+  font-size: 2.5rem;
+  margin-right: 15px;
+  color: #4caf50;
+}
+
+.passenger-details p {
+  margin: 2px 0;
+  font-size: 0.95rem;
+}
+
+.checkmark {
+  color: #4caf50;
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.edit-btn {
+  margin-left: auto;
+  cursor: pointer;
+  color: #007bff;
+  font-size: 1.2rem;
+}
+
+.dropdown-arrow::after {
+  content: "v";
+  display: inline-block;
+  transform: rotate(90deg);
+}

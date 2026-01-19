@@ -11,20 +11,64 @@ use Illuminate\Support\Facades\DB;
 class AdminTicketController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Tickets::query();
+{
+    $query = Tickets::with('seatClass'); 
 
-        if ($request->has('flight_id')) {
-            $query->where('flight_id', $request->flight_id);
-        }
-        if ($request->has('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
-
-        $perPage = (int) $request->get('per_page', 15);
-        $data = $query->orderBy('id', 'desc')->paginate($perPage);
-        return response()->json(['message' => 'Danh sách vé', 'data' => $data], 200);
+    // 2. Lọc theo airline_id gửi từ React
+    if ($request->has('airline_id')) {
+        $query->where('airline_id', $request->airline_id);
     }
+    
+    if ($request->has('class_id')) {
+        $query->where('class_id', $request->class_id);
+    }
+
+    $perPage = (int) $request->get('per_page', 15);
+    // Lấy data và trả về cấu trúc đồng nhất
+    $data = $query->orderBy('id', 'desc')->paginate($perPage);
+    
+    return response()->json([
+        'message' => 'Danh sách vé',
+        'data' => $data // Trả về toàn bộ object paginate
+    ], 200);
+}
+
+public function getSeatClasses()
+{
+    try {
+        // Sử dụng Model thay vì Query Builder để đồng bộ
+        $classes = \App\Models\SeatClasses::select('id', 'name')->get();
+        return response()->json($classes, 200);
+    } catch (Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+    }
+}
+    // Thêm hàm này vào AdminTicketController.php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'airline_id'  => 'required',
+        'class_id'    => 'required',
+        'price'       => 'required|numeric|min:0',
+        'total_seats' => 'required|integer|min:1',
+        // XÓA DÒNG flight_id Ở ĐÂY
+    ]);
+
+    try {
+        $ticket = Tickets::create([
+            'airline_id'      => $validated['airline_id'],
+            'class_id'        => $validated['class_id'],
+            'price'           => $validated['price'],
+            'total_seats'     => $validated['total_seats'],
+            'available_seats' => $validated['total_seats'],
+            // XÓA DÒNG 'flight_id' Ở ĐÂY
+        ]);
+
+        return response()->json(['message' => 'Phân bổ vé thành công', 'data' => $ticket], 200);
+    } catch (Exception $e) {
+        return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
+    }
+}
 
     public function show($id)
     {

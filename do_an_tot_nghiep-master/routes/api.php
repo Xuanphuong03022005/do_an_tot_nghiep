@@ -7,6 +7,7 @@ use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
 use App\Http\Controllers\ADMIN\AdminSeatController;
 use App\Http\Controllers\ADMIN\AdminUserController;
+use App\Http\Controllers\ADMIN\AdminTicketController;
 use App\Http\Controllers\CLIENT\TicketController;
 use App\Http\Controllers\CLIENT\UserController;
 use Illuminate\Support\Facades\Route;
@@ -22,9 +23,9 @@ Route::get('/', function () {
     Route::get('/flights/search', [AdminFlightsController::class, 'search']);
 Route::prefix('admin')->group(function () {
     //airline
+    Route::get('/airline', [AdminAirlineController::class, 'index']); // Route này trả về ds máy bay
     Route::post('/airline', [AdminAirlineController::class, 'store']);
-    Route::post('/airline/update/{id}', [AdminAirlineController::class, 'update']);
-    Route::get('/airline', [AdminAirlineController::class, 'index']);
+    Route::post('/airline/{id}', [AdminAirlineController::class, 'update']);
     Route::get('/airline/{id}', [AdminAirlineController::class, 'show']);
     Route::delete('/airline/{id}', [AdminAirlineController::class, 'destroy']);
     //seat_classes
@@ -42,8 +43,16 @@ Route::prefix('admin')->group(function () {
     //airpost
     Route::resource('airports', AdminAirportsController::class);
     //flight
-    Route::post('/flight', [AdminFlightsController::class, 'store']);
+    Route::delete('flight/{id}', [AdminFlightsController::class, 'destroy']);
+     Route::post('/flight', [AdminFlightsController::class, 'store']);
     Route::get('/flights', [AdminFlightsController::class, 'index']);
+    Route::get('/flight/{id}', [AdminFlightsController::class, 'show']);
+
+    Route::get('/seat-classes', [AdminTicketController::class, 'getSeatClasses']);
+    Route::get('/tickets', [AdminTicketController::class, 'index']);
+    Route::post('/tickets', [AdminTicketController::class, 'store']);
+    Route::put('tickets/{id}', [AdminTicketController::class, 'update']); // Đảm bảo dùng {id}
+    Route::delete('tickets/{id}', [AdminTicketController::class, 'destroy']);
 
     //user
     Route::get('/users', [AdminUserController::class, 'index']);
@@ -60,5 +69,4 @@ Route::prefix('admin')->group(function () {
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);
     Route::post('/login', [UserController::class, 'login']);
-    Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);

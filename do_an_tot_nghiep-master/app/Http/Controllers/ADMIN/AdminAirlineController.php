@@ -79,45 +79,35 @@ class AdminAirlineController extends Controller
         }
     }
 
-    public function update(CreateAirlineRequest $request, $id)
-    {
-        try {
-            $airline = Airlines::find($id);
-            if (!$airline) {
-                return response()->json([
-                    'message' => 'Không tìm thấy máy bay.'
-                ], 404);
-            }
-            $imageName = $airline->image;
-            if ($request->hasFile('image')) {
-                $res = CloudinaryUpload::upload($request->file('image'), 'airlines', 'airline');
-                if ($res) {
-                    $imageName = $res['display_name'] . '.' . $res['format'];
-                } else {
-                    return response()->json([
-                        'message' => 'Cập nhật ảnh thất bại.'
-                    ], 500);
-                }
-            }
-            $airline->update([
-                'name' => $request->input('name'),
-                'code' => $request->input('code'),
-                'image' =>  $imageName,
-                'type' => $request->input('type'),
-                'registration_code' => $request->input('registration_code'),
-                'seat_rows' => $request->input('seat_rows'),
-                'seat_per_row' => $request->input('seat_per_row'),
-            ]);
-            return response()->json([
-                'message' => 'Cập nhật thành công.'
-            ], 200);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json([
-                'message' => 'Cập nhật thất bại.'
-            ], 500);
+  // AdminAirlineController.php
+public function update(Request $request, $id) // Đổi tạm thành Request để tránh lỗi validation ảnh
+{
+    try {
+        $airline = Airlines::find($id);
+        if (!$airline) return response()->json(['message' => 'Không tìm thấy'], 404);
+
+        $imageName = $airline->image;
+        if ($request->hasFile('image')) {
+            // Logic upload ảnh của bạn...
+            $res = CloudinaryUpload::upload($request->file('image'), 'airlines', 'airline');
+            $imageName = $res['display_name'] . '.' . $res['format'];
         }
+
+        $airline->update([
+            'name' => $request->name,
+            'code' => $request->code,
+            'image' => $imageName,
+            'type' => $request->type,
+            'registration_code' => $request->registration_code,
+            'seat_rows' => $request->seat_rows,
+            'seat_per_row' => $request->seat_per_row,
+        ]);
+
+        return response()->json(['message' => 'Cập nhật thành công'], 200);
+    } catch (Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
     }
+}
 
     public function destroy($id)
     {

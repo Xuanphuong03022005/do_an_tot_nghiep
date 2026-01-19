@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('flight_id');
+           $table->unsignedBigInteger('flight_id')->nullable()->change();
             $table->unsignedBigInteger('class_id');
             $table->integer('price');
             $table->integer('total_seats');

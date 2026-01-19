@@ -22,8 +22,8 @@ class CreateFlightRequest extends FormRequest
     {
         return [
             'airline_id' => 'required|exists:airlines,id',
-            'departure_airport_id' => 'required|exists:airports,id',
-            'arrival_airport_id'  => 'required|exists:airports,id|different:departure_airport_id',
+           'dep_code'       => 'required|string|max:10', // Cập nhật tên cột mới
+        'arr_code'       => 'required|string|max:10|different:dep_code',
 
             'departure_time' => 'required|date|after:now',
 
@@ -68,6 +68,10 @@ class CreateFlightRequest extends FormRequest
 
             'outbound_flight.seat_classes.*.id' => 'required|exists:seat_classes,id',
             'outbound_flight.seat_classes.*.price' => 'required|numeric|min:1',
+            'flight_number'  => 'required|string|max:255',
+        'seat_classes'   => 'required|array|min:1',
+        'seat_classes.*.id'    => 'required',
+        'seat_classes.*.price' => 'required|numeric|min:0',
 
 
         ];
@@ -85,8 +89,8 @@ class CreateFlightRequest extends FormRequest
             'airline_id.required' => 'Vui lòng chọn hãng hàng không.',
             'airline_id.exists' => 'Hãng hàng không không tồn tại.',
 
-            'departure_airport_id.required' => 'Vui lòng chọn sân bay đi.',
-            'departure_airport_id.exists' => 'Sân bay đi không tồn tại.',
+           'dep_code'       => 'required|string|max:10', // Đổi từ departure_airport_id
+        'arr_code'       => 'required|string|max:10',
             'arrival_airport_id.required' => 'Vui lòng chọn sân bay đến.',
             'arrival_airport_id.exists' => 'Sân bay đến không tồn tại.',
             'arrival_airport_id.different' => 'Sân bay đi và sân bay đến không được trùng nhau.',

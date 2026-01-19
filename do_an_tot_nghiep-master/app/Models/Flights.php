@@ -7,27 +7,27 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Flights extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
+
     protected $fillable = [
         'airline_id',
-        'departure_airport_id',
-        'arrival_airport_id',
+        'dep_code', 
+        'arr_code', 
         'departure_time',
         'arrival_time',
         'flight_number',
+        'free_baggage_kg'
     ];
- public function airline()
+
+    // Quan hệ lấy thông tin máy bay
+    public function airline()
     {
         return $this->belongsTo(Airlines::class, 'airline_id');
     }
 
-    public function departureAirport()
+    // Quan hệ lấy danh sách vé của chuyến bay
+    public function tickets()
     {
-        return $this->belongsTo(Airports::class, 'departure_airport_id');
-    }
-
-    public function arrivalAirport()
-    {
-        return $this->belongsTo(Airports::class, 'arrival_airport_id');
+        return $this->hasMany(Tickets::class, 'flight_id');
     }
 }

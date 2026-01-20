@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ADMIN\AdminAirlineController;
 use App\Http\Controllers\ADMIN\AdminAirpotsController;
+use App\Http\Controllers\ADMIN\AdminBaggagePackageController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
@@ -37,6 +38,7 @@ Route::prefix('admin')->group(function () {
     //flight
     Route::post('/flight', [AdminFlightsController::class, 'store']);
     Route::get('/flights', [AdminFlightsController::class, 'index']);
+    Route::get('/flights-by-date', [AdminFlightsController::class, 'getFlightsByDate']);
     //user
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::put('/users/{id}', [AdminUserController::class, 'update']);
@@ -47,6 +49,14 @@ Route::prefix('admin')->group(function () {
     Route::delete('baggage-rules/{id}',[AdminBaggageRuleController::class, 'destroy']);
     Route::get('baggage-rules/{id}',[AdminBaggageRuleController::class, 'show']);
     Route::get('baggage-rules-by-class/{id}',[AdminBaggageRuleController::class, 'getByClass']);
+    //baggage_package
+    Route::prefix('baggage-packages')->group(function () {
+    Route::get('/', [AdminBaggagePackageController::class, 'index']);
+    Route::get('/{id}', [AdminBaggagePackageController::class, 'show']);
+    Route::post('/', [AdminBaggagePackageController::class, 'store']);
+    Route::put('/{id}', [AdminBaggagePackageController::class, 'update']);
+    Route::delete('/{id}', [AdminBaggagePackageController::class, 'destroy']);
+});
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);

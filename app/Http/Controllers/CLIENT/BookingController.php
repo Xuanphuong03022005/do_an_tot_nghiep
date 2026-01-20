@@ -17,9 +17,6 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    /**
-     * List bookings for a user (or all with no user_id)
-     */
     public function index(Request $request)
     {
         $query = DB::table('bookings')
@@ -35,9 +32,6 @@ class BookingController extends Controller
         return response()->json(['message' => 'Danh sách đặt chỗ', 'data' => $data], 200);
     }
 
-    /**
-     * Show booking details including passengers and tickets
-     */
     public function show($id)
     {
         $booking = DB::table('bookings')->where('id', $id)->first();
@@ -57,7 +51,7 @@ class BookingController extends Controller
             'passengers' => $passengers
         ]], 200);
     }
-
+    
     public function store(StoreBookingRequest $request)
     {
         DB::beginTransaction();
@@ -87,6 +81,10 @@ class BookingController extends Controller
                         'identity_type' => $passenger['identity_type'],
                         'identity_number' => $passenger['identity_number'],
                     ]);
+                    $ticketOutbound = Tickets::where('flight_id', $data['outbound_flight_id'])->first();
+                    if($ticketOutbound->available_seats <= 0){
+                        return response()->json(['message' => 'Vé này đã hết. Vui lòng chọn vé khác hoặc chuyến bay khác.'], 400);
+                    }
                     $bookingTicketOutbound = BookingTickets::create([
                         'booking_id' => $booking->id,
                         'ticket_id' => $value['ticket_id'],
@@ -95,12 +93,14 @@ class BookingController extends Controller
                         'class_id' => $value['class_id'],
                         'type' => 'outbound'
                     ]);
-                    $ticketOutbound = Tickets::where('flight_id', $data['outbound_flight_id'])->first();
                     $ticketOutbound->update([
                         'available_seats' => $ticketOutbound->available_seats - 1
                         ]);
-                    if ($data['return_flight_id']) {
+                    if (isset($data['return_flight_id']) && $data['return_flight_id'] != null) {
                         $ticketReturn = Tickets::where('flight_id', $data['return_flight_id'])->first();
+                        if($ticketReturn->available_seats <= 0){
+                            return response()->json(['message' => 'Vé khứ hồi cho hạng này đã hết. Vui lòng chuyến bay khác.'], 400);
+                        }
                         $bookingTicketReturn = BookingTickets::create([
                             'booking_id' => $booking->id,
                             'ticket_id' => $ticketReturn->id,

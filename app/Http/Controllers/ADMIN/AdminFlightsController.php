@@ -17,16 +17,50 @@ use Illuminate\Http\Request;
 
 class AdminFlightsController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        try{
+        try {
             $flights = Flights::with(['airline:id,name', 'departureAirport:id,name', 'arrivalAirport:id,name'])
                 ->orderBy('departure_time', 'asc')
                 ->get();
-            return response()->json($flights);
+            return response()->json([
+                'data' => $flights,
+                'message' => 'Lấy danh sách chuyến bay thành công.'
+            ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Lấy danh sách chuyến bay thất bại.'
+            ], 500);
+        }
+    }
+
+    public function getFlightsByDate(Request $request)
+    {
+        try {
+            $date = $request->query('date');
+
+            if (!$date) {
+                return response()->json([
+                    'message' => 'Vui lòng cung cấp ngày (date).'
+                ], 400);
+            }
+
+            $startOfDay = Carbon::parse($date)->startOfDay();
+            $endOfDay = Carbon::parse($date)->endOfDay();
+
+            $flights = Flights::with(['airline:id,name', 'departureAirport:id,name', 'arrivalAirport:id,name'])
+                ->whereBetween('departure_time', [$startOfDay, $endOfDay])
+                ->orderBy('departure_time', 'asc')
+                ->get();
+
+            return response()->json([
+                'data' => $flights,
+                'message' => 'Lấy danh sách chuyến bay thành công.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Lấy danh sách chuyến bay thất bại.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

@@ -19,14 +19,25 @@ class TicketController extends Controller
         try {
             $query = Tickets::query()
             ->select(
-                'tickets.*',
-                'flights.flight_number',
+                'tickets.id',
                 'flights.departure_time',
                 'flights.arrival_time',
+                'a1.name as departure_airport',
+                'a2.name as arrival_airport',
+                'tickets.total_seats',
+                'tickets.available_seats',
+                'a.name as airline_name',
+                'tickets.flight_id',
+                'tickets.class_id',
+                'flights.flight_number',
                 DB::raw('seat_classes.name as class_name')
             )
             ->leftJoin('flights', 'tickets.flight_id', '=', 'flights.id')
-            ->leftJoin('seat_classes', 'tickets.class_id', '=', 'seat_classes.id');
+            ->leftJoin('airlines as a', 'flights.airline_id', '=', 'a.id')
+            ->leftJoin('airports as a1', 'flights.departure_airport_id', '=', 'a1.id')
+            ->leftJoin('airports as a2', 'flights.arrival_airport_id', '=', 'a2.id')
+            ->leftJoin('seat_classes', 'tickets.class_id', '=', 'seat_classes.id')
+            ->where('tickets.available_seats', '>', 0);
 
         if ($request->filled('class_id')) {
             $query->where('tickets.class_id', $request->class_id);
@@ -46,16 +57,25 @@ class TicketController extends Controller
     public function show($id)
     {
         $ticket = Tickets::select(
-            'tickets.*',
-            'flights.flight_number',
+            'tickets.id',
+            'tickets.price',
             'flights.departure_time',
             'flights.arrival_time',
-            'a.name',
+            'a1.name as departure_airport',
+            'a2.name as arrival_airport',
+            'tickets.total_seats',
+            'tickets.available_seats',
+            'a.name as airline_name',
+            'tickets.flight_id',
+            'tickets.class_id',
+            'flights.flight_number',
             DB::raw('seat_classes.name as class_name')
         )
             ->leftJoin('flights', 'tickets.flight_id', '=', 'flights.id')
+            ->leftJoin('airlines as a', 'flights.airline_id', '=', 'a.id')
+            ->leftJoin('airports as a1', 'flights.departure_airport_id', '=', 'a1.id')
+            ->leftJoin('airports as a2', 'flights.arrival_airport_id', '=', 'a2.id')
             ->leftJoin('seat_classes', 'tickets.class_id', '=', 'seat_classes.id')
-            ->leftJoin('airlines as a', 'flights.airline_id', 'a.id')
             ->where('tickets.id', $id)
             ->first();
 

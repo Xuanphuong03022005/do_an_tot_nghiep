@@ -1,0 +1,363 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+/* Style cho container khi không có vé */
+.ticket-list-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #f7f9fc;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Inter", sans-serif;
+}
+
+h2 {
+  color: #1f2937;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 10px;
+}
+
+/* === NO TICKETS SUGGESTION === */
+.no-tickets-suggestion {
+  text-align: center;
+  padding: 50px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.suggestion-text {
+  font-size: 1.5rem;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.suggestion-subtext {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.suggestion-btn {
+  background-color: #10b981;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.suggestion-btn:hover {
+  background-color: #059669;
+}
+
+/* KHỐI TỔNG GIÁ ĐẶT TẠM ĐỂ GIẢ LẬP GIAO DIỆN CHUNG TRANG (Phần trên cùng)*/
+.total-summary-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #ecfdf5;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+.total-summary-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #059669;
+  margin: 0;
+}
+
+.total-summary-value {
+  color: #059669;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* === TICKET ITEM GENERAL === */
+.ticket-item-wrapper {
+  margin-bottom: 25px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.ticket-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ticket-info-main {
+  flex: 2;
+}
+
+.ticket-route {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.route-from,
+.route-to {
+  color: #2563eb;
+}
+
+.ticket-date {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 5px;
+}
+
+.ticket-details {
+  flex: 3;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.detail-item {
+  text-align: center;
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.detail-value {
+  display: block;
+  font-weight: 600;
+  margin-top: 3px;
+  color: #1f2937;
+}
+
+.class-type {
+  color: #f59e0b; /* Màu vàng cam cho hạng vé */
+}
+
+.price-value {
+  font-size: 1.1rem;
+  color: #dc2626; /* Màu đỏ cho giá */
+}
+
+.ticket-actions {
+  flex: 1;
+  text-align: right;
+}
+
+.action-btn {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  padding: 8px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.action-btn:hover,
+.action-btn.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* === TICKET DETAIL CONTENT (COLLAPSIBLE) === */
+.ticket-detail-content {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 20px;
+  transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+  background-color: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ticket-detail-content.open {
+  max-height: 500px; /* Giá trị lớn hơn nội dung */
+  padding: 20px;
+}
+
+.detail-flex-container {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.itinerary-section,
+.conditions-section {
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.itinerary-section h4,
+.conditions-section h4 {
+  color: #3b82f6;
+  margin-top: 0;
+  border-bottom: 1px dashed #d1d5db;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+}
+
+.itinerary-timeline {
+  border-left: 2px solid #a1a1aa;
+  padding-left: 15px;
+  position: relative;
+}
+
+.timeline-segment {
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.timeline-segment::before {
+  content: "•";
+  position: absolute;
+  left: -20px;
+  top: 0;
+  font-size: 20px;
+  color: #3b82f6;
+  line-height: 0.8;
+}
+
+.time-point {
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.airport-name {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin: 3px 0;
+}
+
+.timeline-duration {
+  padding: 10px 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.conditions-list {
+  list-style: none;
+  padding: 0;
+}
+
+.condition-item {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.checkmark {
+  color: #10b981;
+  font-weight: 700;
+  margin-right: 5px;
+}
+
+.change-flight-btn {
+  background-color: #f59e0b;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.change-flight-btn:hover {
+  background-color: #d97706;
+}
+
+/* === TỔNG GIÁ ĐẶT BÊN DƯỚI CÙNG (KHÔNG CỐ ĐỊNH) === */
+.final-summary-standalone {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  margin-top: 30px; /* Đảm bảo có khoảng cách với danh sách vé */
+}
+
+.final-summary-total-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 5px 0;
+}
+
+.final-summary-total-value {
+  color: #10b981; /* Màu xanh lá nổi bật cho tổng giá */
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-left: 10px;
+}
+
+.final-summary-caption {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 15px;
+}
+
+.final-summary-caption a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 5px;
+}
+
+.summary-links {
+  margin-bottom: 20px;
+}
+
+.summary-links a {
+  font-size: 0.85rem;
+  color: #4b5563;
+  text-decoration: none;
+  margin: 0 10px;
+  transition: color 0.2s;
+}
+.summary-links a:hover {
+  color: #3b82f6;
+}
+
+.btn-customer-info {
+  width: 100%;
+  background-color: #4caf50;
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-customer-info:hover {
+  background-color: #45a049;
+}
+
+.search-summary {
+  display: flex;
+}

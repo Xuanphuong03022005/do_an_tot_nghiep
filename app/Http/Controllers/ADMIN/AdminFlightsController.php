@@ -67,6 +67,12 @@ class AdminFlightsController extends Controller
 
     public function store(CreateFlightRequest $request)
     {
+         return response()->json(
+                    [
+                        'message' => 'Khoảng thời gian này đã có chuyến bay tồn tại (Mỗi chuyến bay cách nhau ít nhất 30 phút).'
+                    ],
+                    200
+                );
         $data = $request->all();
         DB::beginTransaction();
         try {

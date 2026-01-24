@@ -1,0 +1,240 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+/* navbar */
+.navbar {
+  display: flex;
+  justify-content: space-evenly;
+  height: 75px;
+}
+
+/* logo */
+.navbar-logo img {
+  width: 200px;
+  /* margin-bottom: -36px; */
+  height: 115px;
+  top: -16px;
+  position: relative;
+}
+/* menu */
+.navbar-menu {
+  display: flex;
+  gap: 32px; /* khoảng cách giữa các mục */
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #004b8d; /* màu xanh Bamboo */
+  background-color: white;
+}
+
+.navbar-menu a {
+  text-decoration: none;
+  color: #004b8d;
+  position: relative;
+  transition: all 0.2s ease;
+  font-size: 19px;
+  font-family: sans-serif;
+  font-weight: 500;
+}
+
+.navbar-menu a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -34px;
+  width: 100%;
+  height: 100px;
+  height: 40px;
+  background-color: transparent;
+  transition: width 0.3s ease;
+}
+
+.navbar-menu a:hover {
+  color: #00a859;
+  text-decoration: none;
+}
+
+.navbar-menu a:hover::after {
+  width: 100%;
+}
+
+.menu-item {
+  position: relative;
+  cursor: pointer;
+  font-weight: 500;
+  color: #1c2b36;
+}
+
+/* --- MENU STYLE --- */
+.menu-wrapper {
+  position: relative;
+}
+
+.mega-menu {
+  position: absolute;
+  top: 49px;
+  left: -630%;
+  width: 1520px;
+  background: #fffdfd;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 10px 10px;
+  z-index: 99999;
+  padding: 40px 80px;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.mega-inner {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+}
+
+.mega-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 200px;
+}
+
+.mega-column h4 {
+  color: #0b5394;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  font-size: 16px;
+}
+
+.mega-column a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+  font-size: 15px;
+}
+
+.mega-column a:hover {
+  color: #2aa84a;
+}
+
+.mega-image {
+  text-align: center;
+}
+
+.mega-image img {
+  width: 200px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 5px;
+}
+
+.mega-image p {
+  font-size: 14px;
+  color: #0b5394;
+  font-weight: 500;
+}
+
+/* Hiệu ứng xuất hiện */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .navbar-menu {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}
+
+/* acctions */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #00264d;
+}
+
+.nav-ac_main {
+  display: flex;
+  font-size: 16px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-item_lg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.separator {
+  color: #ccc;
+  margin: 0 5px;
+}
+
+.flag-icon {
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+a.login {
+  color: #0072bc;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+a.register {
+  color: #28a745;
+  margin-left: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.icon {
+  color: #00264d;
+  font-size: 14px;
+}
+
+.user-icon {
+  font-size: 16px;
+  margin-left: 5px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button.confirm-booking-btn {
+  margin: auto;
+}
+
+.time-block {
+  display: flex;
+}
+
+.accordion-content.open {
+  display: flex;
+  /* margin: auto; */
+  position: relative;
+  left: -15%;
+  top: 8%;
+}

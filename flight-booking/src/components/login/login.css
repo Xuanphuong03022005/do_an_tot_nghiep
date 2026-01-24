@@ -1,0 +1,349 @@
+/* style.css */
+
+/* --- Header Styling --- */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 40px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  font-weight: bold;
+  color: #007bff;
+  font-size: 1.5rem;
+}
+
+.nav-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.search-help {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.locale {
+  color: #4a4a4a;
+  font-weight: bold;
+}
+
+.nav-item_lg {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 1rem;
+}
+
+.login,
+.register {
+  text-decoration: none;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.user-icon {
+  font-size: 1.5rem;
+  color: #ccc;
+}
+
+.user-icon.active {
+  color: #e54a64; /* Màu hồng cho icon người dùng đã đăng nhập */
+}
+
+/* Đã đăng nhập */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 1rem;
+}
+
+.greeting {
+  color: #000;
+}
+
+.user-name {
+  color: #388e3c; /* Màu xanh lá cây cho tên người dùng */
+  font-weight: bold;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 0.9rem;
+}
+
+/* --- Form Styling --- */
+.main-content {
+  text-align: center;
+  padding: 50px;
+}
+
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px); /* Để form căn giữa */
+  background: url("https://picsum.photos/1920/1080?random=1") no-repeat center
+    center/cover;
+}
+
+.login-box {
+  background-color: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+}
+
+.login-box h2 {
+  color: #333;
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+.bamboo-logo {
+  font-weight: bold;
+  color: #388e3c;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 10px;
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.login-options a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.switch-link {
+  margin-top: 20px;
+  font-size: 0.9rem;
+}
+
+.switch-link a {
+  color: #007bff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Styling cho Form Đăng Ký (tùy chỉnh thêm nếu cần) */
+.register-form {
+  background: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  max-width: 600px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.register-form h4 {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+  margin-top: 25px;
+  color: #007bff;
+}
+.register-form .form-group {
+  display: inline-block;
+  width: 48%;
+  margin-right: 4%;
+}
+.register-form .form-group:nth-child(even) {
+  margin-right: 0;
+}
+
+/* --- BỐ CỤC HAI CỘT CHO TRANG ĐĂNG KÝ (Ảnh 1 bên, Form 1 bên) --- */
+
+.register-split-container {
+  display: flex;
+  min-height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+  /* Nền nhẹ */
+}
+
+/* CỘT TRÁI - PHẦN HÌNH ẢNH */
+.register-image-side {
+  flex: 0 0 400px; /* Chiều rộng cố định, ví dụ 400px */
+  background-image: url("/public/images/tiepvien.jpg"); /* Sử dụng ảnh tiếp viên bạn cung cấp */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  padding: 20px;
+  left: 10%;
+  border-radius: 20px 0px 0px 20px;
+}
+
+.logo-and-tagline {
+  color: white;
+  font-size: 1.1rem;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-weight: 300;
+}
+.logo-text {
+  font-weight: bold;
+  color: #00a85a; /* Màu xanh của Bamboo */
+}
+
+/* CỘT PHẢI - PHẦN FORM */
+.register-form-side {
+  flex-grow: 1; /* Chiếm phần còn lại của không gian */
+  background-color: #fffae5;
+  padding: 30px 60px;
+  overflow-y: auto; /* Cho phép cuộn nếu form dài */
+  border-radius: 0px 20px 20px 0;
+}
+
+.form-content-wrapper {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.bamboo-club-logo {
+  text-align: right;
+  font-weight: bold;
+  color: #00a85a;
+  font-size: 1.2rem;
+}
+
+.main-title {
+  color: #333;
+  font-size: 2rem;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+/* TIÊU ĐỀ PHẦN */
+.form-section-header {
+  color: #007bff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+.note {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 15px;
+}
+
+/* BỐ CỤC HÀNG 2 CỘT INPUT */
+.form-row-2-col {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.form-group-input {
+  flex: 1;
+}
+
+.form-group-input label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.form-group-input input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* CHECKBOX & BUTTON */
+.policy-and-submit {
+  margin-top: 20px;
+}
+
+.policy-checkbox {
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.submit-btn-bamboo {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-btn-bamboo:hover {
+  background-color: #0056b3;
+}
+
+.login-message-box {
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  background-color: #e6ffed; /* Nền xanh nhạt */
+  color: #388e3c; /* Chữ xanh đậm */
+  border: 1px solid #b3e0c7;
+  font-weight: 500;
+  text-align: center;
+  word-break: break-word; /* Đảm bảo ngắt dòng cho ID dài */
+}

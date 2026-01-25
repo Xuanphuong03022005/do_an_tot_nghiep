@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./admin.css";
+import api from "../api/api";
 
 const AirlineManager = () => {
   const [airlines, setAirlines] = useState([]);
@@ -24,7 +25,7 @@ const AirlineManager = () => {
   const fetchAirlines = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_URL);
+      const response = await api.get("/admin/airline");
       setAirlines(response.data);
     } catch (error) {
       console.error("Lỗi lấy dữ liệu máy bay:", error);

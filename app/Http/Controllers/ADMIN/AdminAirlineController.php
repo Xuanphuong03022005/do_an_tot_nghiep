@@ -28,10 +28,7 @@ class AdminAirlineController extends Controller
     {
         try {
             $url = env('CLOUDINARY_URL_AIRLINE');
-            $airline = Airlines::select(
-                'airlines.*',
-                DB::raw("CONCAT('$url/', image) as image")
-            )
+            $airline = Airlines::select('airlines.*')
                 ->where('id', $id)
                 ->get();
             return response()->json($airline);
@@ -49,7 +46,7 @@ class AdminAirlineController extends Controller
         $file = $request->file('image');
         $res = CloudinaryUpload::upload($file, 'airlines', 'airline');
         if ($res) {
-            $imageName = $res['display_name'] . '.' . $res['format'];
+            $imageName = $res['url'] ;
             try {
                 $airline = Airlines::create([
                     'name' => $request->input('name'),  

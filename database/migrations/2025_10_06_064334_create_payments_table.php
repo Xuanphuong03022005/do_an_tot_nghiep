@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('booking_id');
             $table->string('method');
+            $table->string('image');
             $table->integer('amount');
             $table->enum('status',['pending', 'success', 'failed']);
             $table->timestamps();

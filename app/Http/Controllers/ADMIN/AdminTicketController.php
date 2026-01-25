@@ -22,6 +22,12 @@ class AdminTicketController extends Controller
         }
 
         $perPage = (int) $request->get('per_page', 15);
+         $query->join('seat_classes', 'tickets.class_id', '=', 'seat_classes.id')
+                ->join('flights', 'tickets.flight_id', '=', 'flights.id')
+                ->join('airports as dep_airport', 'flights.departure_airport_id', '=', 'dep_airport.id')
+                ->join('airports as arr_airport', 'flights.arrival_airport_id', '=', 'arr_airport.id')
+                ->join('airlines', 'flights.airline_id', '=', 'airlines.id')
+               ->select('tickets.*', 'seat_classes.name as class_name', 'flights.flight_number', 'dep_airport.name as departure_airport', 'arr_airport.name as arrival_airport', 'airlines.name as airline_name');
         $data = $query->orderBy('id', 'desc')->paginate($perPage);
         return response()->json(['message' => 'Danh sách vé', 'data' => $data], 200);
     }

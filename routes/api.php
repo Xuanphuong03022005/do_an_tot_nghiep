@@ -6,10 +6,13 @@ use App\Http\Controllers\ADMIN\AdminAirpotsController;
 use App\Http\Controllers\ADMIN\AdminBaggagePackageController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
+use App\Http\Controllers\ADMIN\AdminPaymentController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
 use App\Http\Controllers\ADMIN\AdminSeatController;
+use App\Http\Controllers\ADMIN\AdminTicketController;
 use App\Http\Controllers\ADMIN\AdminUserController;
 use App\Http\Controllers\CLIENT\BookingController;
+use App\Http\Controllers\CLIENT\PaymentController;
 use App\Http\Controllers\CLIENT\TicketController;
 use App\Http\Controllers\CLIENT\UserController;
 use Illuminate\Support\Facades\Route;
@@ -57,7 +60,13 @@ Route::prefix('admin')->group(function () {
     Route::post('/', [AdminBaggagePackageController::class, 'store']);
     Route::put('/{id}', [AdminBaggagePackageController::class, 'update']);
     Route::delete('/{id}', [AdminBaggagePackageController::class, 'destroy']);
-});
+    //payment - booking pending
+    });
+    Route::get('/booking-pending', [AdminPaymentController::class, 'bookingPending']);
+    Route::get('/booking-pending/{id}', [AdminPaymentController::class, 'bookingPendingDetail']);
+    Route::put('/change-status-booking/{id}', [AdminPaymentController::class, 'changeStatus']);
+    //tickets
+    Route::get('/tickets', [AdminTicketController::class, 'index']);
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);
@@ -66,3 +75,5 @@ Route::prefix('admin')->group(function () {
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     //booking
     Route::post('/booking', [BookingController::class, 'store']);
+    //payment 
+    Route::post('/payment', [PaymentController::class, 'store']);

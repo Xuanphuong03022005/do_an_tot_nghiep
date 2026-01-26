@@ -21,4 +21,7 @@ protected $fillable = [
 public function seat_class() {
     return $this->belongsTo(SeatClasses::class, 'class_id');
 }
+public function flight() {
+    return $this->belongsTo(Flight::class, 'flight_id');
+}
 }

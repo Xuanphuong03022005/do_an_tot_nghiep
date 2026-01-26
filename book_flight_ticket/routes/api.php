@@ -2,14 +2,18 @@
 
 use App\Http\Controllers\ADMIN\AdminAirlineController;
 use App\Http\Controllers\ADMIN\AdminAirportsController;
+use App\Http\Controllers\ADMIN\AdminAirpotsController;
 use App\Http\Controllers\ADMIN\AdminBaggagePackageController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
+use App\Http\Controllers\ADMIN\AdminBookingController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
+use App\Http\Controllers\ADMIN\AdminPaymentController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
 use App\Http\Controllers\ADMIN\AdminSeatController;
-use App\Http\Controllers\ADMIN\AdminUserController;
 use App\Http\Controllers\ADMIN\AdminTicketController;
+use App\Http\Controllers\ADMIN\AdminUserController;
 use App\Http\Controllers\CLIENT\BookingController;
+use App\Http\Controllers\CLIENT\PaymentController;
 use App\Http\Controllers\CLIENT\TicketController;
 use App\Http\Controllers\CLIENT\UserController;
 use Illuminate\Support\Facades\Route;
@@ -36,23 +40,15 @@ Route::prefix('admin')->group(function () {
     Route::delete('/seat/{id}', [AdminSeatController::class, 'destroy']);
     //airpost
     Route::resource('airports', AdminAirportsController::class);
-    
     //flight
+    Route::get('/flight/{id}', [AdminFlightsController::class, 'show']); 
     Route::post('/flight', [AdminFlightsController::class, 'store']);
+    Route::delete('/flight/{id}', [AdminFlightsController::class, 'destroy']);
     Route::get('/flights', [AdminFlightsController::class, 'index']);
     Route::get('/flights-by-date', [AdminFlightsController::class, 'getFlightsByDate']);
-
-    Route::get('/flight/{id}', [AdminFlightsController::class, 'show']); // Để nút "Xem" chạy được
-    Route::delete('/flight/{id}', [AdminFlightsController::class, 'destroy']); // Để nút "Xóa" chạy được
     //user
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::put('/users/{id}', [AdminUserController::class, 'update']);
-        Route::get('/users/{id}/history', [AdminUserController::class, 'bookingHistory']);
-//ticket
-    Route::get('/tickets', [AdminTicketController::class, 'index']);
-    Route::post('/tickets', [AdminTicketController::class, 'store']);
-    Route::put('/tickets/{id}', [AdminTicketController::class, 'update']);
-    Route::delete('/tickets/{id}', [AdminTicketController::class, 'destroy']);
     //baggage rules
     Route::post('baggage-rules',[AdminBaggageRuleController::class, 'store']);
     Route::get('baggage-rules',[AdminBaggageRuleController::class, 'index']);
@@ -67,12 +63,25 @@ Route::prefix('admin')->group(function () {
     Route::post('/', [AdminBaggagePackageController::class, 'store']);
     Route::put('/{id}', [AdminBaggagePackageController::class, 'update']);
     Route::delete('/{id}', [AdminBaggagePackageController::class, 'destroy']);
-});
+    });
+    //payment - booking pending
+    Route::get('/booking-pending', [AdminPaymentController::class, 'bookingPending']);
+    Route::get('/booking-pending/{id}', [AdminPaymentController::class, 'bookingPendingDetail']);
+    Route::put('/change-status-booking/{id}', [AdminPaymentController::class, 'changeStatus']);
+    //booking
+   Route::get('/bookings', [AdminPaymentController::class, 'index']); 
+    Route::put('/change-status-booking/{id}', [AdminPaymentController::class, 'changeStatus']);
+    //tickets
+    Route::get('/tickets', [AdminTicketController::class, 'index']);
+ 
+    Route::post('/tickets', [AdminTicketController::class, 'store']);
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);
     Route::post('/login', [UserController::class, 'login']);
- 
+    Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     //booking
     Route::post('/booking', [BookingController::class, 'store']);
+    //payment 
+    Route::post('/payment', [PaymentController::class, 'store']);

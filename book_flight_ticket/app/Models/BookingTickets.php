@@ -15,4 +15,20 @@ class BookingTickets extends Model
         'type',
        
     ];
+    public function booking()
+    {
+        return $this->belongsTo(Bookings::class, 'booking_id', 'id');
+    }
+    public function ticket()
+    {
+        return $this->belongsTo(Tickets::class, 'ticket_id', 'id');
+    }
+    public function passenger()
+    {
+        return $this->belongsTo(Passengers::class, 'passenger_id', 'id');
+    }
+    public function flight()
+    {
+        return $this->belongsTo(Flights::class, 'flight_id', 'id');
+    }   
 }

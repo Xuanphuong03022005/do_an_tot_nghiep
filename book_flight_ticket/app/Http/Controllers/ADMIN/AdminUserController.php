@@ -93,16 +93,11 @@ public function index(Request $request)
 public function bookingHistory($id)
 {
     try {
-        $history = DB::table('bookings')
-            ->join('flights', 'bookings.flight_id', '=', 'flights.id')
-            ->join('airlines', 'flights.airline_id', '=', 'airlines.id')
-            ->where('bookings.user_id', $id)
-            ->select(
-                'flights.flight_number', 
-                'airlines.name as airline_name',
-                'bookings.created_at',
-                'bookings.total_price'
-            )
+        // Sử dụng Eloquent để lấy đầy đủ quan hệ ticket -> flight và ticket -> seat_class
+        // Điều này giúp lấy được flight_number và hạng ghế cho React
+        $history = \App\Models\Bookings::with(['ticket.flight', 'ticket.seat_class'])
+            ->where('user_id', $id)
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json($history, 200);

@@ -17,10 +17,6 @@ class Flights extends Model
         'flight_number',
         'free_baggage_kg',
     ];
-    public function tickets()
-{
-    return $this->hasMany(Tickets::class, 'flight_id');
-}
     public function airline()
     {
         return $this->belongsTo(Airlines::class);
@@ -32,5 +28,9 @@ class Flights extends Model
     public function arrivalAirport()
     {
         return $this->belongsTo(Airports::class, 'arrival_airport_id');   
+    }
+    public function tickets()
+    {
+        return $this->hasMany(Tickets::class, 'flight_id', 'id');
     }
 }

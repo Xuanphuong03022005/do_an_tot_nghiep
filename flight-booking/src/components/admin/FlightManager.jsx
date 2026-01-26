@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./admin.css";
-
+// --- QUẢN LÝ API TẬP TRUNG ---
+const BASE_URL = "http://127.0.0.1:8000/api";
+const API_ENDPOINTS = {
+  AIRLINES: `${BASE_URL}/admin/airline`,
+  FLIGHTS: `${BASE_URL}/admin/flights`,
+  FLIGHT_DETAIL: `${BASE_URL}/admin/flight`, // Dùng cho cả POST, DELETE, GET theo ID
+  AIRPORTS: `${BASE_URL}/admin/airports`,
+  TICKETS: `${BASE_URL}/admin/tickets`,
+};
 const FlightManager = () => {
   const [flights, setFlights] = useState([]);
   const [airlines, setAirlines] = useState([]);
@@ -9,80 +17,70 @@ const FlightManager = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [airports, setAirports] = useState([]);
-  const [selectedFlight, setSelectedFlight] = useState(null); // Lưu dữ liệu chuyến bay chọn xem
+  const [selectedFlight, setSelectedFlight] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     flight_number: "",
-    dep_code: "",
-    arr_code: "",
+    departure_airport_id: "",
+    arrival_airport_id: "",
     airline_id: "",
     departure_date: "",
     dep_time: "",
     arr_time: "",
   });
 
-  const API_URL = "http://127.0.0.1:8000/api/admin/flight";
-
   useEffect(() => {
     fetchInitialData();
   }, []);
 
+
+  // 1. Load dữ liệu ban đầu
   const fetchInitialData = async () => {
     try {
       const [resAirlines, resFlights, resAirports] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/api/admin/airline"),
-        axios.get("http://127.0.0.1:8000/api/admin/flights"),
-        axios.get("http://127.0.0.1:8000/api/admin/airports"),
+        axios.get(API_ENDPOINTS.AIRLINES),
+        axios.get(API_ENDPOINTS.FLIGHTS),
+        axios.get(API_ENDPOINTS.AIRPORTS),
       ]);
+
       setAirlines(resAirlines.data);
-      setFlights(resFlights.data || []);
+      const flightArray = resFlights.data?.data || [];
+      setFlights(Array.isArray(flightArray) ? flightArray : []);
       setAirports(resAirports.data || []);
     } catch (error) {
-      console.error(error);
+      console.error("Lỗi tải dữ liệu:", error);
+      setFlights([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // 2. Xóa chuyến bay
   const handleDelete = async (id) => {
-    // Hiển thị xác nhận trước khi xóa
-    if (
-      window.confirm(
-        "Bạn có chắc chắn muốn xóa chuyến bay này? Hành động này không thể hoàn tác."
-      )
-    ) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa?")) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/admin/flight/${id}`);
+        await axios.delete(`${API_ENDPOINTS.FLIGHT_DETAIL}/${id}`);
         alert("Xóa thành công!");
-
-        // Cập nhật lại danh sách hiển thị mà không cần load lại trang
         setFlights(flights.filter((f) => f.id !== id));
       } catch (error) {
-        console.error("Lỗi khi xóa:", error);
-        alert(
-          "Không thể xóa chuyến bay. Lỗi: " +
-            (error.response?.data?.message || "Lỗi hệ thống")
-        );
+        alert("Lỗi: " + (error.response?.data?.message || "Hệ thống"));
       }
     }
   };
 
-  // FlightManager.jsx
+  // 3. Xem chi tiết
   const handleViewDetail = async (id) => {
     try {
-      // Gọi trực tiếp để tránh sai sót từ biến API_URL
-      const res = await axios.get(
-        `http://127.0.0.1:8000/api/admin/flight/${id}`
-      );
+      const res = await axios.get(`${API_ENDPOINTS.FLIGHT_DETAIL}/${id}`);
       setSelectedFlight(res.data);
       setIsDetailModalOpen(true);
     } catch (error) {
-      console.error("Lỗi chi tiết:", error.response?.data);
-      alert("Không thể tải chi tiết. Hãy xem lỗi cụ thể ở tab Network.");
+      alert("Không thể tải chi tiết.");
     }
   };
 
+  // 4. Khi chọn Máy bay (để lấy cấu hình vé của hãng đó)
   const handleAirlineChange = async (airlineId) => {
     setFormData({ ...formData, airline_id: airlineId });
     if (!airlineId) {
@@ -90,12 +88,11 @@ const FlightManager = () => {
       return;
     }
     try {
+      // URL có tham số query
       const res = await axios.get(
-        `http://127.0.0.1:8000/api/admin/tickets?airline_id=${airlineId}`
+        `${API_ENDPOINTS.TICKETS}?airline_id=${airlineId}`
       );
       const tickets = res.data.data.data || res.data.data || [];
-
-      // FIX: Khởi tạo thêm trường 'inputPrice' cho mỗi hạng vé để người dùng nhập
       const ticketsWithPrice = tickets.map((t) => ({ ...t, inputPrice: "" }));
       setSelectedAirlineTickets(ticketsWithPrice);
     } catch (error) {
@@ -103,7 +100,6 @@ const FlightManager = () => {
     }
   };
 
-  // Hàm xử lý khi thay đổi giá tiền của từng hạng vé
   const handlePriceChange = (id, value) => {
     const updatedTickets = selectedAirlineTickets.map((t) =>
       t.id === id ? { ...t, inputPrice: value } : t
@@ -111,40 +107,41 @@ const FlightManager = () => {
     setSelectedAirlineTickets(updatedTickets);
   };
 
+
+  // 5. Submit thêm chuyến bay mới
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Kiểm tra xem tất cả hạng vé đã được nhập giá chưa
     if (
       selectedAirlineTickets.some((t) => !t.inputPrice || t.inputPrice <= 0)
     ) {
-      alert("Vui lòng nhập giá tiền hợp lệ cho tất cả hạng vé!");
+      alert("Vui lòng nhập giá vé hợp lệ!");
       return;
     }
 
     const payload = {
-      flight_number: formData.flight_number,
-      airline_id: formData.airline_id,
-      dep_code: formData.dep_code,
-      arr_code: formData.arr_code,
-      departure_time: `${formData.departure_date} ${formData.dep_time}:00`,
-      arrival_time: `${formData.departure_date} ${formData.arr_time}:00`,
-      // Gửi mảng giá tiền do người dùng nhập lên Backend
-      seat_classes: selectedAirlineTickets.map((t) => ({
-        id: t.class_id,
-        price: parseFloat(t.inputPrice),
-      })),
+      airline_id: Number(formData.airline_id),
+      departure_airport_id: Number(formData.departure_airport_id),
+      arrival_airport_id: Number(formData.arrival_airport_id),
+      free_baggage_kg: 20,
+      outbound_flight: {
+        departure_time: `${formData.departure_date} ${formData.dep_time}:00`,
+        arrival_time: `${formData.departure_date} ${formData.arr_time}:00`,
+        seat_classes: selectedAirlineTickets.map((t) => ({
+          id: t.class_id,
+          price: parseFloat(t.inputPrice),
+        })),
+      },
     };
 
     try {
-      await axios.post(API_URL, payload);
-      alert("Thêm chuyến bay thành công!");
+      // Dùng chung endpoint FLIGHT_DETAIL nhưng với phương thức POST
+      await axios.post(API_ENDPOINTS.FLIGHT_DETAIL, payload);
+      alert("Thêm thành công!");
       setIsModalOpen(false);
       fetchInitialData();
     } catch (error) {
-      alert(
-        "Lỗi: " + (error.response?.data?.message || "Kiểm tra lại dữ liệu")
-      );
+      alert("Thất bại: " + (error.response?.data?.message || "Lỗi validation"));
     }
   };
 
@@ -239,26 +236,45 @@ const FlightManager = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Sân bay đi (Code)</label>
-                  <input
-                    type="text"
+                  <label>Sân bay đi</label>
+                  <select
                     required
-                    placeholder="HAN"
+                    value={formData.departure_airport_id}
                     onChange={(e) =>
-                      setFormData({ ...formData, dep_code: e.target.value })
+                      setFormData({
+                        ...formData,
+                        departure_airport_id: e.target.value,
+                      })
                     }
-                  />
+                  >
+                    <option value="">-- Chọn sân bay đi --</option>
+                    {airports.map((ap) => (
+                      <option key={ap.id} value={ap.id}>
+                        {ap.name} ({ap.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className="form-group">
-                  <label>Sân bay đến (Code)</label>
-                  <input
-                    type="text"
+                  <label>Sân bay đến</label>
+                  <select
                     required
-                    placeholder="SGN"
+                    value={formData.arrival_airport_id}
                     onChange={(e) =>
-                      setFormData({ ...formData, arr_code: e.target.value })
+                      setFormData({
+                        ...formData,
+                        arrival_airport_id: e.target.value,
+                      })
                     }
-                  />
+                  >
+                    <option value="">-- Chọn sân bay đến --</option>
+                    {airports.map((ap) => (
+                      <option key={ap.id} value={ap.id}>
+                        {ap.name} ({ap.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Ngày xuất phát</label>
@@ -324,7 +340,10 @@ const FlightManager = () => {
                               `Hạng ${ticket.class_id}`}
                           </strong>
                           <div style={{ fontSize: "12px", color: "#666" }}>
-                            Số lượng: {ticket.total_seats} ghế
+
+                            {/* HIỂN THỊ THÊM HÀNG GHẾ TẠI ĐÂY */}
+                            Số lượng: {ticket.total_seats} ghế (
+                            {ticket.row_start} - {ticket.row_end})
                           </div>
                         </div>
                         <div style={{ flex: 1, textAlign: "right" }}>
@@ -332,12 +351,14 @@ const FlightManager = () => {
                             type="number"
                             placeholder="Nhập giá vé (VNĐ)"
                             required
+
                             style={{
                               width: "150px",
                               padding: "5px",
                               border: "1px solid #ccc",
                               borderRadius: "4px",
                             }}
+
                             value={ticket.inputPrice}
                             onChange={(e) =>
                               handlePriceChange(ticket.id, e.target.value)
@@ -378,72 +399,155 @@ const FlightManager = () => {
         <div className="modal-overlay">
           <div
             className="modal-content"
-            style={{ width: "600px", textAlign: "left" }}
+            style={{ width: "650px", textAlign: "left" }}
           >
             <h4
-              style={{ borderBottom: "2px solid #eee", paddingBottom: "10px" }}
+              style={{
+                borderBottom: "2px solid #eee",
+                paddingBottom: "10px",
+                color: "#007bff",
+              }}
             >
-              Chi tiết chuyến bay: {selectedFlight.flight_number}
+              CHI TIẾT CHUYẾN BAY: {selectedFlight.flight_number}
             </h4>
 
             <div
+              className="form-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gap: "20px",
+                gap: "15px",
                 marginTop: "15px",
               }}
             >
-              <div>
-                <p>
-                  <strong>Máy bay:</strong> {selectedFlight.airline?.name}
-                </p>
-                <p>
-                  <strong>Lộ trình:</strong> {selectedFlight.dep_code} ✈{" "}
-                  {selectedFlight.arr_code}
-                </p>
+              <div className="form-group">
+                <label style={{ fontWeight: "bold" }}>Số hiệu chuyến bay</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="form-control"
+                  value={selectedFlight.flight_number || ""}
+                />
               </div>
-              <div>
-                <p>
-                  <strong>Khởi hành:</strong> {selectedFlight.departure_time}
-                </p>
-                <p>
-                  <strong>Giờ đến (dự kiến):</strong>{" "}
-                  {selectedFlight.arrival_time}
-                </p>
+              <div className="form-group">
+                <label style={{ fontWeight: "bold" }}>Máy bay (Airline)</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="form-control"
+                  value={selectedFlight.airline?.name || "N/A"}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ fontWeight: "bold" }}>Sân bay đi</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="form-control"
+                  value={selectedFlight.departure_airport?.name || "N/A"}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ fontWeight: "bold" }}>Sân bay đến</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="form-control"
+                  value={selectedFlight.arrival_airport?.name || "N/A"}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ fontWeight: "bold" }}>
+                  Thời gian xuất phát
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  className="form-control"
+                  value={selectedFlight.departure_time || ""}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ fontWeight: "bold" }}>
+                  Thời gian đến (dự kiến)
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  className="form-control"
+                  value={selectedFlight.arrival_time || ""}
+                />
               </div>
             </div>
 
-            <h5 style={{ marginTop: "20px", color: "#2c3e50" }}>
-              Danh sách vé & Giá đã cấu hình:
-            </h5>
-            <table className="data-table" style={{ marginTop: "10px" }}>
-              <thead>
-                <tr style={{ background: "#f8f9fa" }}>
-                  <th>Hạng vé</th>
-                  <th>Số lượng</th>
-                  <th>Giá bán</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedFlight.tickets?.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.seat_class?.name}</td>
-                    <td>{t.total_seats} ghế</td>
-                    <td style={{ color: "green", fontWeight: "bold" }}>
-                      {new Intl.NumberFormat().format(t.price)}đ
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div
+              className="seat-info-section"
+              style={{
+                marginTop: "20px",
+                padding: "15px",
+                background: "#f1f8ff",
+                borderRadius: "5px",
+                border: "1px solid #cce5ff",
+              }}
+            >
+              <h5 style={{ marginBottom: "10px", color: "#004085" }}>
+                Cấu hình giá vé đã lưu:
+              </h5>
+              {selectedFlight.tickets && selectedFlight.tickets.length > 0 ? (
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                  {selectedFlight.tickets.map((t) => (
+                    <li
+                      key={t.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: "10px",
+                        borderBottom: "1px solid #dee2e6",
+                        paddingBottom: "5px",
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: "#333" }}>
+                          {t.seat_class?.name || `Hạng ${t.class_id}`}
+                        </strong>
+                        <div style={{ fontSize: "12px", color: "#666" }}>
+                          Số lượng: {t.total_seats} ghế ({t.row_start} -{" "}
+                          {t.row_end})
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          color: "#28a745",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {new Intl.NumberFormat("vi-VN").format(t.price)} VNĐ
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ color: "#721c24", fontStyle: "italic" }}>
+                  Chưa có dữ liệu vé cho chuyến bay này.
+                </p>
+              )}
+            </div>
 
-            <div className="modal-actions" style={{ marginTop: "20px" }}>
+            <div
+              className="modal-actions"
+              style={{
+                marginTop: "20px",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
               <button
                 className="btn-cancel"
                 onClick={() => setIsDetailModalOpen(false)}
+                style={{ padding: "8px 20px" }}
               >
-                Đóng
+                Đóng lại
               </button>
             </div>
           </div>

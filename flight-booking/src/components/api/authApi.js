@@ -8,8 +8,14 @@ const authApi = {
         return axiosClient.post("/login", data);
     },
     // Thêm hàm này để Admin lấy danh sách user từ DB
-    getAllUsers() {
-        return axiosClient.get("/users");
+
+    getAllUsers(email = "") {
+        // Nếu có email thì gửi query string ?email=...
+        return axiosClient.get(`/admin/users${email ? `?email=${email}` : ""}`);
+    },
+    getUserHistory(userId) {
+        return axiosClient.get(`/users/${userId}/history`);
+
     }
 };
 

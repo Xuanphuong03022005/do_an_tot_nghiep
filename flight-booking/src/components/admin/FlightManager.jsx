@@ -2,6 +2,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./admin.css";
 
+// --- QUẢN LÝ API TẬP TRUNG ---
+const BASE_URL = "http://127.0.0.1:8000/api";
+const API_ENDPOINTS = {
+  AIRLINES: `${BASE_URL}/admin/airline`,
+  FLIGHTS: `${BASE_URL}/admin/flights`,
+  FLIGHT_DETAIL: `${BASE_URL}/admin/flight`, // Dùng cho cả POST, DELETE, GET theo ID
+  AIRPORTS: `${BASE_URL}/admin/airports`,
+  TICKETS: `${BASE_URL}/admin/tickets`,
+};
+
 const FlightManager = () => {
   const [flights, setFlights] = useState([]);
   const [airlines, setAirlines] = useState([]);
@@ -9,87 +19,69 @@ const FlightManager = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [airports, setAirports] = useState([]);
-  const [selectedFlight, setSelectedFlight] = useState(null); // Lưu dữ liệu chuyến bay chọn xem
+  const [selectedFlight, setSelectedFlight] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     flight_number: "",
-    departure_airport_id: "", // Đổi từ dep_code thành id
-    arrival_airport_id: "", // Đổi từ arr_code thành id
+    departure_airport_id: "",
+    arrival_airport_id: "",
     airline_id: "",
     departure_date: "",
     dep_time: "",
     arr_time: "",
   });
 
-  const API_URL = "http://127.0.0.1:8000/api/admin/flight";
-
   useEffect(() => {
     fetchInitialData();
   }, []);
 
+  // 1. Load dữ liệu ban đầu
   const fetchInitialData = async () => {
     try {
       const [resAirlines, resFlights, resAirports] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/api/admin/airline"),
-        axios.get("http://127.0.0.1:8000/api/admin/flights"),
-        axios.get("http://127.0.0.1:8000/api/admin/airports"),
+        axios.get(API_ENDPOINTS.AIRLINES),
+        axios.get(API_ENDPOINTS.FLIGHTS),
+        axios.get(API_ENDPOINTS.AIRPORTS),
       ]);
 
       setAirlines(resAirlines.data);
-
-      // FIX TẠI ĐÂY: Backend trả về { data: [...], message: "..." }
-      // Bạn phải lấy resFlights.data.data (mảng thực sự)
       const flightArray = resFlights.data?.data || [];
       setFlights(Array.isArray(flightArray) ? flightArray : []);
-
       setAirports(resAirports.data || []);
     } catch (error) {
-      console.error("Lỗi tải dữ liệu ban đầu:", error);
-      setFlights([]); // Tránh lỗi map khi gặp crash
+      console.error("Lỗi tải dữ liệu:", error);
+      setFlights([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // 2. Xóa chuyến bay
   const handleDelete = async (id) => {
-    // Hiển thị xác nhận trước khi xóa
-    if (
-      window.confirm(
-        "Bạn có chắc chắn muốn xóa chuyến bay này? Hành động này không thể hoàn tác."
-      )
-    ) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa?")) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/admin/flight/${id}`);
+        await axios.delete(`${API_ENDPOINTS.FLIGHT_DETAIL}/${id}`);
         alert("Xóa thành công!");
-
-        // Cập nhật lại danh sách hiển thị mà không cần load lại trang
         setFlights(flights.filter((f) => f.id !== id));
       } catch (error) {
-        console.error("Lỗi khi xóa:", error);
-        alert(
-          "Không thể xóa chuyến bay. Lỗi: " +
-            (error.response?.data?.message || "Lỗi hệ thống")
-        );
+        alert("Lỗi: " + (error.response?.data?.message || "Hệ thống"));
       }
     }
   };
 
-  // FlightManager.jsx
+  // 3. Xem chi tiết
   const handleViewDetail = async (id) => {
     try {
-      // Gọi trực tiếp để tránh sai sót từ biến API_URL
-      const res = await axios.get(
-        `http://127.0.0.1:8000/api/admin/flight/${id}`
-      );
+      const res = await axios.get(`${API_ENDPOINTS.FLIGHT_DETAIL}/${id}`);
       setSelectedFlight(res.data);
       setIsDetailModalOpen(true);
     } catch (error) {
-      console.error("Lỗi chi tiết:", error.response?.data);
-      alert("Không thể tải chi tiết. Hãy xem lỗi cụ thể ở tab Network.");
+      alert("Không thể tải chi tiết.");
     }
   };
 
+  // 4. Khi chọn Máy bay (để lấy cấu hình vé của hãng đó)
   const handleAirlineChange = async (airlineId) => {
     setFormData({ ...formData, airline_id: airlineId });
     if (!airlineId) {
@@ -97,12 +89,11 @@ const FlightManager = () => {
       return;
     }
     try {
+      // URL có tham số query
       const res = await axios.get(
-        `http://127.0.0.1:8000/api/admin/tickets?airline_id=${airlineId}`
+        `${API_ENDPOINTS.TICKETS}?airline_id=${airlineId}`
       );
       const tickets = res.data.data.data || res.data.data || [];
-
-      // FIX: Khởi tạo thêm trường 'inputPrice' cho mỗi hạng vé để người dùng nhập
       const ticketsWithPrice = tickets.map((t) => ({ ...t, inputPrice: "" }));
       setSelectedAirlineTickets(ticketsWithPrice);
     } catch (error) {
@@ -110,7 +101,6 @@ const FlightManager = () => {
     }
   };
 
-  // Hàm xử lý khi thay đổi giá tiền của từng hạng vé
   const handlePriceChange = (id, value) => {
     const updatedTickets = selectedAirlineTickets.map((t) =>
       t.id === id ? { ...t, inputPrice: value } : t
@@ -118,29 +108,25 @@ const FlightManager = () => {
     setSelectedAirlineTickets(updatedTickets);
   };
 
+  // 5. Submit thêm chuyến bay mới
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Kiểm tra giá vé
     if (
       selectedAirlineTickets.some((t) => !t.inputPrice || t.inputPrice <= 0)
     ) {
-      alert("Vui lòng nhập giá tiền hợp lệ cho tất cả hạng vé!");
+      alert("Vui lòng nhập giá vé hợp lệ!");
       return;
     }
 
-    // 2. Tạo Payload đúng cấu trúc Backend yêu cầu (Có outbound_flight)
     const payload = {
       airline_id: Number(formData.airline_id),
       departure_airport_id: Number(formData.departure_airport_id),
       arrival_airport_id: Number(formData.arrival_airport_id),
-      free_baggage_kg: 20, // Bạn có thể thêm input cho trường này nếu cần
-
-      // Backend yêu cầu trường này để lưu thời gian
+      free_baggage_kg: 20,
       outbound_flight: {
         departure_time: `${formData.departure_date} ${formData.dep_time}:00`,
         arrival_time: `${formData.departure_date} ${formData.arr_time}:00`,
-        // Gửi kèm giá vé vào đây để Backend xử lý hàm PriceSeatBySeatclasses
         seat_classes: selectedAirlineTickets.map((t) => ({
           id: t.class_id,
           price: parseFloat(t.inputPrice),
@@ -149,16 +135,13 @@ const FlightManager = () => {
     };
 
     try {
-      await axios.post(API_URL, payload);
-      alert("Thêm chuyến bay thành công!");
+      // Dùng chung endpoint FLIGHT_DETAIL nhưng với phương thức POST
+      await axios.post(API_ENDPOINTS.FLIGHT_DETAIL, payload);
+      alert("Thêm thành công!");
       setIsModalOpen(false);
       fetchInitialData();
     } catch (error) {
-      // Hiển thị chi tiết lỗi từ Validation của Laravel
-      const serverMessage =
-        error.response?.data?.message || "Lỗi không xác định";
-      alert("Thất bại: " + serverMessage);
-      console.error("Chi tiết lỗi validation:", error.response?.data?.errors);
+      alert("Thất bại: " + (error.response?.data?.message || "Lỗi validation"));
     }
   };
 

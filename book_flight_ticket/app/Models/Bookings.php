@@ -13,12 +13,11 @@ class Bookings extends Model
         'discount_id',
         'total_amount',
         'total_final',
-        // 'round_trip_id',
+        'expired_at',
         'status',
     ];
-    // public function roundTrip()
-    // {
-    //     return $this->belongsTo(RoundTrip::class, 'round_trip_id');
-    // }
-
+    public function payments()
+    {
+        return $this->hasMany(Payments::class, 'booking_id', 'id');
+    }
 }

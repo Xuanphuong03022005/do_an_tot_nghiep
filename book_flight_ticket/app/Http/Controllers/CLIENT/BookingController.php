@@ -63,11 +63,12 @@ class BookingController extends Controller
             $booking = Bookings::create([
                 'user_id' => $data['user_id'],
                 'pnr_code' => $pnr,
-                'status' => 'ticketed',
+                'status' => 'draft',
                 'total_amount' => $data['total_amount'],
                 'discount_id' => $data['discount_id'],
                 'discount_value' => $data['discount_value'],
                 'total_final' => $data['total_final'],
+                'expired_at' =>now()->addMinutes(10),
             ]);
             foreach ($data['tickets'] as $value) {
                 $passengers = $value['passengers'];

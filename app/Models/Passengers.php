@@ -15,4 +15,8 @@ class Passengers extends Model
         'identity_type',
         'identity_number',
     ];
+    public function bookingTickets()
+    {
+        return $this->hasMany(BookingTickets::class, 'passenger_id', 'id');
+    }
 }

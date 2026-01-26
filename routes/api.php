@@ -5,6 +5,7 @@ use App\Http\Controllers\ADMIN\AdminAirportsController;
 use App\Http\Controllers\ADMIN\AdminAirpotsController;
 use App\Http\Controllers\ADMIN\AdminBaggagePackageController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
+use App\Http\Controllers\ADMIN\AdminBookingController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminPaymentController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
@@ -60,11 +61,13 @@ Route::prefix('admin')->group(function () {
     Route::post('/', [AdminBaggagePackageController::class, 'store']);
     Route::put('/{id}', [AdminBaggagePackageController::class, 'update']);
     Route::delete('/{id}', [AdminBaggagePackageController::class, 'destroy']);
-    //payment - booking pending
     });
+    //payment - booking pending
     Route::get('/booking-pending', [AdminPaymentController::class, 'bookingPending']);
     Route::get('/booking-pending/{id}', [AdminPaymentController::class, 'bookingPendingDetail']);
     Route::put('/change-status-booking/{id}', [AdminPaymentController::class, 'changeStatus']);
+    //booking
+    Route::get('/bookings', [AdminBookingController::class, 'index']);
     //tickets
     Route::get('/tickets', [AdminTicketController::class, 'index']);
 });

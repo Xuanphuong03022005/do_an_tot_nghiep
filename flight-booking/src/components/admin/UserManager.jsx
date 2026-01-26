@@ -8,7 +8,29 @@ function UserManager() {
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [history, setHistory] = useState([]);
+    const modalOverlayStyle = {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0, 0, 0, 0.5)", // Lớp nền tối phía sau
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
+    };
 
+    const modalContentStyle = {
+        backgroundColor: "#fff",
+        padding: "25px",
+        borderRadius: "12px",
+        width: "800px", // Độ rộng phù hợp để hiển thị bảng lịch sử
+        maxHeight: "85vh",
+        overflowY: "auto", // Tự động tạo thanh cuộn nếu danh sách quá dài
+        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+        position: "relative",
+    };
     const fetchUsers = async (email = "") => {
         setLoading(true);
         try {
@@ -36,6 +58,7 @@ function UserManager() {
     const viewHistory = async (userId) => {
         try {
             const res = await authApi.getUserHistory(userId);
+            // Dữ liệu từ API mới sẽ là mảng các đơn hàng (bookings)
             setHistory(res.data || res || []);
             setShowModal(true);
         } catch (err) {
@@ -186,93 +209,187 @@ function UserManager() {
             </table>
 
             {showModal && (
-                <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        zIndex: 1000,
-                    }}
-                >
-                    <div
-                        style={{
-                            backgroundColor: "#fff",
-                            padding: "20px",
-                            borderRadius: "8px",
-                            width: "600px",
-                            maxHeight: "80vh",
-                            overflowY: "auto",
-                        }}
-                    >
-                        <h4>Lịch sử đặt vé</h4>
+                <div style={modalOverlayStyle}>
+                    <div style={modalContentStyle}>
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginBottom: "15px",
+                            }}
+                        >
+                            <h4 style={{ margin: 0 }}>
+                                Lịch sử đặt vé khách hàng #{history[0]?.user_id}
+                            </h4>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                style={{
+                                    border: "none",
+                                    background: "none",
+                                    cursor: "pointer",
+                                    fontSize: "20px",
+                                }}
+                            >
+                                &times;
+                            </button>
+                        </div>
+
                         <table
                             width="100%"
-                            border="1"
                             style={{
                                 borderCollapse: "collapse",
-                                marginTop: "10px",
+                                fontSize: "14px",
                             }}
                         >
                             <thead>
-                                <tr style={{ backgroundColor: "#f2f2f2" }}>
-                                    <th>Chuyến bay</th>
-                                    <th>Ghế</th>
-                                    <th>Ngày đặt</th>
+                                <tr
+                                    style={{
+                                        backgroundColor: "#f8f9fa",
+                                        borderBottom: "2px solid #eee",
+                                    }}
+                                >
+                                    <th
+                                        style={{
+                                            padding: "10px",
+                                            textAlign: "left",
+                                        }}
+                                    >
+                                        Mã PNR
+                                    </th>
+                                    <th
+                                        style={{
+                                            padding: "10px",
+                                            textAlign: "left",
+                                        }}
+                                    >
+                                        Chuyến bay
+                                    </th>
+                                    <th
+                                        style={{
+                                            padding: "10px",
+                                            textAlign: "left",
+                                        }}
+                                    >
+                                        Hạng ghế
+                                    </th>
+                                    <th
+                                        style={{
+                                            padding: "10px",
+                                            textAlign: "left",
+                                        }}
+                                    >
+                                        Tổng tiền
+                                    </th>
+                                    <th
+                                        style={{
+                                            padding: "10px",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        Trạng thái
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {history.length > 0 ? (
-                                    history.map((h, i) => (
-                                        <tr key={i}>
-                                            <td style={{ padding: "8px" }}>
-                                                {h.flight_number}
+                                    history.map((item) => (
+                                        <tr
+                                            key={item.id}
+                                            style={{
+                                                borderBottom: "1px solid #eee",
+                                            }}
+                                        >
+                                            <td style={{ padding: "10px" }}>
+                                                <strong>{item.pnr_code}</strong>
+                                            </td>
+                                            <td style={{ padding: "10px" }}>
+                                                {/* Hiển thị số hiệu chuyến bay từ quan hệ ticket.flight */}
+                                                {item.ticket?.flight
+                                                    ?.flight_number || "N/A"}
+                                                <br />
+                                                <small
+                                                    style={{ color: "#666" }}
+                                                >
+                                                    {
+                                                        item.ticket?.flight
+                                                            ?.departure_time
+                                                    }
+                                                </small>
+                                            </td>
+                                            <td style={{ padding: "10px" }}>
+                                                {item.ticket?.seat_class
+                                                    ?.name || "N/A"}
+                                            </td>
+                                            <td style={{ padding: "10px" }}>
+                                                {/* Sử dụng total_final theo đúng cấu trúc bảng bookings của bạn */}
+                                                {item.total_final
+                                                    ? parseInt(
+                                                          item.total_final
+                                                      ).toLocaleString()
+                                                    : 0}
+                                                đ
                                             </td>
                                             <td
                                                 style={{
-                                                    padding: "8px",
+                                                    padding: "10px",
                                                     textAlign: "center",
                                                 }}
                                             >
-                                                {h.seat_position}
-                                                {h.row_number}
-                                            </td>
-                                            <td style={{ padding: "8px" }}>
-                                                {h.created_at}
+                                                <span
+                                                    style={{
+                                                        padding: "4px 8px",
+                                                        borderRadius: "4px",
+                                                        fontSize: "12px",
+                                                        fontWeight: "bold",
+                                                        backgroundColor:
+                                                            item.status ===
+                                                                "success" ||
+                                                            item.status ===
+                                                                "ticketed"
+                                                                ? "#d4edda"
+                                                                : item.status ===
+                                                                  "pending"
+                                                                ? "#fff3cd"
+                                                                : "#f8d7da",
+                                                        color:
+                                                            item.status ===
+                                                                "success" ||
+                                                            item.status ===
+                                                                "ticketed"
+                                                                ? "#155724"
+                                                                : item.status ===
+                                                                  "pending"
+                                                                ? "#856404"
+                                                                : "#721c24",
+                                                    }}
+                                                >
+                                                    {item.status
+                                                        ? item.status.toUpperCase()
+                                                        : "N/A"}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan="3"
+                                            colSpan="5"
                                             style={{
-                                                padding: "10px",
+                                                padding: "20px",
                                                 textAlign: "center",
                                             }}
                                         >
-                                            Chưa có lịch sử bay
+                                            Không có dữ liệu bay
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
-                        <div style={{ textAlign: "right", marginTop: "15px" }}>
+
+                        <div style={{ textAlign: "right", marginTop: "20px" }}>
                             <button
                                 onClick={() => setShowModal(false)}
-                                style={{
-                                    padding: "8px 20px",
-                                    backgroundColor: "#6c757d",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                }}
+                                className="btn-close-modal"
                             >
                                 Đóng
                             </button>

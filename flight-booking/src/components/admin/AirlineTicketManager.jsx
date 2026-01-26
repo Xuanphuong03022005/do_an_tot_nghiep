@@ -133,16 +133,14 @@ const AirlineTicketManager = () => {
                 price: 0,
             };
 
+            // Gửi POST đến /api/admin/tickets
             const res = await axios.post(`${BASE_URL}/tickets`, payload);
-
-            alert(res.data.message || "Thành công!");
-
-            // QUAN TRỌNG: Đóng modal và load lại dữ liệu ngay lập tức
+            alert(res.data.message);
             setIsModalOpen(false);
-            setFormData({ class_id: "", row_start: "", row_end: "" }); // Reset form
             handleSelectAirline(selectedAirline);
         } catch (err) {
-            alert(err.response?.data?.message || "Thất bại: Lỗi hệ thống");
+            // Lỗi 405 sẽ biến mất sau khi thêm Route POST ở Backend
+            alert(err.response?.data?.message || "Lỗi hệ thống");
         }
     };
 

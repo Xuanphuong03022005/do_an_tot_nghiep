@@ -14,8 +14,8 @@ const authApi = {
         return axiosClient.get(`/admin/users${email ? `?email=${email}` : ""}`);
     },
     getUserHistory(userId) {
-        return axiosClient.get(`/users/${userId}/history`);
-
+        // Thêm /admin vào trước /users
+        return axiosClient.get(`/admin/users/${userId}/history`);
     }
 };
 

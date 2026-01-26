@@ -2,24 +2,28 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./admin.css";
 
+// Khai báo các URL API
+const API_URL_PENDING = "http://127.0.0.1:8000/api/admin/booking-pending/61";
+const API_STATUS_URL = "http://127.0.0.1:8000/api/admin/change-status-booking";
+
 const BookingManager = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-
-    // State cho phân trang
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5; // Bạn có thể thay đổi số lượng hiển thị tại đây
-
-    const API_URL = "http://127.0.0.1:8000/api/admin/tickets";
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     const fetchBookings = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(API_URL);
-            setBookings(response.data.data);
+            const response = await axios.get(API_URL_PENDING);
+            const data = response.data;
+            if (data && typeof data === "object" && !Array.isArray(data)) {
+                setBookings([data]);
+            } else {
+                setBookings(data || []);
+            }
         } catch (error) {
-            console.error("Lỗi khi gọi API:", error);
+            console.error("Lỗi tải dữ liệu:", error);
         } finally {
             setLoading(false);
         }
@@ -29,204 +33,292 @@ const BookingManager = () => {
         fetchBookings();
     }, []);
 
-    // 1. Logic Lọc & Tự động ẩn vé hủy sau 24h để sạch trang quản lý
-    const processedData = bookings.filter((item) => {
-        // Tìm kiếm
-        const matchesSearch =
-            item.id.toString().includes(searchTerm) ||
-            item.seat_class.name
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase());
-
-        // Tự động ẩn vé Hủy sau 24 giờ
-        if (item.status === "Cancelled" || item.deleted_at) {
-            const updateTime = new Date(item.updated_at || item.deleted_at);
-            const now = new Date();
-            if ((now - updateTime) / (1000 * 60 * 60) > 24) return false;
-        }
-        return matchesSearch;
-    });
-
-    // 2. Logic Phân trang
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = processedData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(processedData.length / itemsPerPage);
-
-    // 3. Hàm hiển thị trạng thái theo yêu cầu của bạn
-    const renderStatus = (ticket) => {
-        // Giả lập logic dựa trên dữ liệu hiện có hoặc các trường mới từ Backend
-        if (ticket.status === "Success")
-            return (
-                <span style={{ color: "#28a745", fontWeight: "bold" }}>
-                    Thành công
-                </span>
+    const handleViewDetail = async (id) => {
+        try {
+            setShowModal(true);
+            const response = await axios.get(
+                `http://127.0.0.1:8000/api/admin/booking-pending/${id}`
             );
-        if (ticket.deleted_at || ticket.status === "Cancelled") {
-            return (
-                <div style={{ color: "#dc3545" }}>
-                    <strong>Đã hủy</strong>
-                    <div style={{ fontSize: "11px", fontStyle: "italic" }}>
-                        {ticket.cancel_reason || "Quá hạn thanh toán"}
-                    </div>
-                </div>
-            );
+            setSelectedBooking(response.data);
+        } catch (error) {
+            alert("Lỗi tải chi tiết đơn hàng!");
         }
-        return (
-            <span style={{ color: "#ffc107", fontWeight: "bold" }}>
-                Đang xử lý
-            </span>
-        );
+    };
+
+    // Hàm cập nhật trạng thái chung (Dùng cho cả Duyệt và Từ chối)
+    const handleUpdateStatus = async (id, newStatus) => {
+        const actionText = newStatus === "success" ? "DUYỆT" : "TỪ CHỐI";
+        const confirmMsg = `Bạn có chắc chắn muốn ${actionText} đơn hàng ${id} này không?`;
+
+        if (window.confirm(confirmMsg)) {
+            try {
+                await axios.put(`${API_STATUS_URL}/${id}`, {
+                    status: newStatus,
+                });
+                alert(`${actionText} đơn hàng thành công!`);
+                setShowModal(false);
+                fetchBookings(); // Load lại dữ liệu để cập nhật bảng
+            } catch (error) {
+                console.error("Lỗi cập nhật:", error);
+                alert("Đã có lỗi xảy ra khi cập nhật trạng thái!");
+            }
+        }
     };
 
     if (loading)
-        return <div style={{ padding: "20px" }}>Đang tải dữ liệu...</div>;
+        return <div style={{ padding: "20px" }}>Đang kết nối dữ liệu...</div>;
 
     return (
-        <div className="manager-container">
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "20px",
-                }}
-            >
-                <h3>Quản lý Đơn đặt vé</h3>
-
-                <div className="search-box">
-                    <input
-                        type="text"
-                        placeholder="Tìm theo ID hoặc Hạng ghế..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        style={{
-                            padding: "8px 12px",
-                            borderRadius: "6px",
-                            border: "1px solid #ddd",
-                            width: "250px",
-                        }}
-                    />
-                </div>
-            </div>
+        <div className="manager-container" style={{ padding: "20px" }}>
+            <h3>Quản lý Đặt vé & Đối soát</h3>
 
             <table
                 className="admin-table"
-                style={{ width: "100%", borderCollapse: "collapse" }}
+                style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    marginTop: "20px",
+                }}
             >
                 <thead>
                     <tr
                         style={{
                             backgroundColor: "#f8f9fa",
-                            textAlign: "left",
                             borderBottom: "2px solid #dee2e6",
+                            textAlign: "left",
                         }}
                     >
-                        <th style={{ padding: "12px" }}>ID</th>
-                        <th style={{ padding: "12px" }}>Hạng Ghế / Airline</th>
-                        <th style={{ padding: "12px" }}>Thời gian bay</th>
-                        <th style={{ padding: "12px" }}>Giá vé</th>
-
-                        <th style={{ padding: "12px" }}>Trạng thái</th>
-                        <th style={{ padding: "12px" }}>Thao tác</th>
+                        <th style={{ padding: "12px" }}>ID / PNR</th>
+                        <th style={{ padding: "12px" }}>TỔNG TIỀN</th>
+                        <th style={{ padding: "12px" }}>TRẠNG THÁI</th>
+                        <th style={{ padding: "12px" }}>THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {currentItems.length > 0 ? (
-                        currentItems.map((ticket) => (
-                            <tr
-                                key={ticket.id}
-                                style={{ borderBottom: "1px solid #eee" }}
-                            >
-                                <td
+                    {bookings.map((item) => (
+                        <tr
+                            key={item.id}
+                            style={{ borderBottom: "1px solid #eee" }}
+                        >
+                            <td style={{ padding: "12px" }}>
+                                <strong>#{item.id}</strong> <br />
+                                <small style={{ color: "#007bff" }}>
+                                    {item.pnr_code}
+                                </small>
+                            </td>
+                            <td style={{ padding: "12px", fontWeight: "bold" }}>
+                                {parseInt(item.total_final).toLocaleString()}đ
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                                <span
                                     style={{
-                                        padding: "12px",
-                                        fontWeight: "bold",
-                                        color: "#007bff",
+                                        padding: "4px 8px",
+                                        borderRadius: "4px",
+                                        fontSize: "12px",
+                                        backgroundColor:
+                                            item.status === "success"
+                                                ? "#f6ffed"
+                                                : "#fff7e6",
+                                        color:
+                                            item.status === "success"
+                                                ? "#52c41a"
+                                                : "#faad14",
+                                        border: `1px solid ${
+                                            item.status === "success"
+                                                ? "#b7eb8f"
+                                                : "#ffe58f"
+                                        }`,
                                     }}
                                 >
-                                    #{ticket.id}
-                                </td>
-                                <td style={{ padding: "12px" }}>
-                                    <strong>{ticket.seat_class.name}</strong>
-                                    <br />
-                                    <small>ID: {ticket.airline_id}</small>
-                                </td>
-                                <td style={{ padding: "12px" }}>
-                                    {new Date(ticket.created_at).toLocaleString(
-                                        "vi-VN"
-                                    )}
-                                </td>
-                                <td style={{ padding: "12px" }}>
-                                    {ticket.price.toLocaleString()}đ
-                                </td>
-                                <td style={{ padding: "12px" }}>
-                                    {renderStatus(ticket)}
-                                </td>
-                                <td style={{ padding: "12px" }}>
-                                    <button
-                                        className="btn-delete"
-                                        onClick={() => alert("Xóa bản ghi này")}
-                                    >
-                                        Xóa
-                                    </button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td
-                                colSpan="6"
-                                style={{ padding: "20px", textAlign: "center" }}
-                            >
-                                Không có dữ liệu.
+                                    ●{" "}
+                                    {item.status === "success"
+                                        ? "Đã duyệt"
+                                        : "Đang chờ"}
+                                </span>
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                                <button
+                                    onClick={() => handleViewDetail(item.id)}
+                                    style={{
+                                        backgroundColor: "#1890ff",
+                                        color: "white",
+                                        border: "none",
+                                        padding: "6px 12px",
+                                        borderRadius: "4px",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Kiểm tra đơn
+                                </button>
                             </td>
                         </tr>
-                    )}
+                    ))}
                 </tbody>
             </table>
 
-            {/* Điều khiển Phân trang */}
-            <div
-                style={{
-                    marginTop: "20px",
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "10px",
-                }}
-            >
-                <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    style={{ padding: "5px 10px", cursor: "pointer" }}
+            {/* Modal Đối soát */}
+            {showModal && selectedBooking && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 1000,
+                    }}
                 >
-                    Trước
-                </button>
-                <span style={{ alignSelf: "center" }}>
-                    Trang {currentPage} / {totalPages || 1}
-                </span>
-                <button
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    style={{ padding: "5px 10px", cursor: "pointer" }}
-                >
-                    Sau
-                </button>
-            </div>
+                    <div
+                        style={{
+                            backgroundColor: "#fff",
+                            padding: "25px",
+                            borderRadius: "8px",
+                            width: "650px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        }}
+                    >
+                        <h3 style={{ marginTop: 0 }}>
+                            Đối soát thanh toán đơn #{selectedBooking.id}
+                        </h3>
+                        <hr style={{ border: "0.5px solid #eee" }} />
 
-            <button
-                onClick={fetchBookings}
-                style={{
-                    marginTop: "20px",
-                    padding: "8px 16px",
-                    cursor: "pointer",
-                }}
-            >
-                Làm mới dữ liệu
-            </button>
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "25px",
+                                marginTop: "20px",
+                            }}
+                        >
+                            <div style={{ flex: 1 }}>
+                                <p>
+                                    <strong>Mã PNR:</strong>{" "}
+                                    <span style={{ color: "#1890ff" }}>
+                                        {selectedBooking.pnr_code}
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Số tiền cần khớp:</strong>{" "}
+                                    <span
+                                        style={{
+                                            color: "#f5222d",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {parseInt(
+                                            selectedBooking.total_final
+                                        ).toLocaleString()}
+                                        đ
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Trạng thái hiện tại:</strong>{" "}
+                                    {selectedBooking.status}
+                                </p>
+                            </div>
+                            <div style={{ flex: 1, textAlign: "center" }}>
+                                <strong>Bằng chứng chuyển khoản:</strong> <br />
+                                {selectedBooking.payments?.[0]?.image ? (
+                                    <img
+                                        src={selectedBooking.payments[0].image}
+                                        alt="Bill"
+                                        style={{
+                                            width: "100%",
+                                            marginTop: "10px",
+                                            borderRadius: "4px",
+                                            border: "1px solid #ddd",
+                                            maxHeight: "250px",
+                                            objectFit: "contain",
+                                        }}
+                                    />
+                                ) : (
+                                    <p
+                                        style={{
+                                            color: "#999",
+                                            padding: "20px",
+                                            border: "1px dashed #ccc",
+                                            marginTop: "10px",
+                                        }}
+                                    >
+                                        Khách hàng chưa upload ảnh bill
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div
+                            style={{
+                                textAlign: "right",
+                                marginTop: "30px",
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: "12px",
+                            }}
+                        >
+                            <button
+                                onClick={() => setShowModal(false)}
+                                style={{
+                                    padding: "8px 16px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #d9d9d9",
+                                    background: "#fff",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Đóng
+                            </button>
+
+                            {/* Chỉ hiện nút xử lý nếu đơn chưa được Duyệt */}
+                            {selectedBooking.status !== "success" && (
+                                <>
+                                    {/* NÚT TỪ CHỐI */}
+                                    <button
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                selectedBooking.id,
+                                                "cancelled"
+                                            )
+                                        }
+                                        style={{
+                                            backgroundColor: "#ff4d4f",
+                                            color: "white",
+                                            border: "none",
+                                            padding: "8px 16px",
+                                            borderRadius: "4px",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Từ chối đơn
+                                    </button>
+
+                                    {/* NÚT DUYỆT */}
+                                    <button
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                selectedBooking.id,
+                                                "success"
+                                            )
+                                        }
+                                        style={{
+                                            backgroundColor: "#52c41a",
+                                            color: "white",
+                                            border: "none",
+                                            padding: "8px 16px",
+                                            borderRadius: "4px",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Duyệt & Xuất vé
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -82,9 +82,13 @@ const AirlineManager = () => {
 
         try {
             if (editingAirline) {
-                await axios.post(`${API_URL}/${editingAirline.id}`, data, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
+                await axios.post(
+                    `${API_URL}/update/${editingAirline.id}`,
+                    data,
+                    {
+                        headers: { "Content-Type": "multipart/form-data" },
+                    }
+                );
                 alert("Cập nhật máy bay thành công");
             } else {
                 await axios.post(API_URL, data, {

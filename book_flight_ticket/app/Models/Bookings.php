@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Bookings extends Model
 {
     protected $fillable = [
@@ -23,5 +23,10 @@ class Bookings extends Model
     public function bookingTickets()
     {
         return $this->hasMany(BookingTickets::class, 'booking_id', 'id');
+    }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id'); 
+        // Đảm bảo 'user_id' là tên cột khóa ngoại trong bảng bookings của bạn
     }
 }

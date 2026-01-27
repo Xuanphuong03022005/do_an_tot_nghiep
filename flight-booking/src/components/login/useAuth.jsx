@@ -4,7 +4,10 @@ import authApi from "../api/authApi"; // Chỉ cần 1 lần ../ vì api cùng c
 const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const [currentUser, setCurrentUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const handleRegister = async (formData) => {
     setLoading(true);
     setError(null);
@@ -34,26 +37,45 @@ const useAuth = () => {
       setLoading(false);
     }
   };
+  // App.js
+  // useAuth.js
+
   const handleLogin = async (email, password) => {
     setLoading(true);
     try {
-      // Gửi dữ liệu sạch lên server
       const response = await authApi.login({
         email: email.trim(),
         password: password,
       });
 
-      // Kiểm tra đúng cấu trúc response.data.token
-      if (response && response.data && response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        return true; // Trả về true để Login.jsx thực hiện navigate
+      // Log này để bạn kiểm tra lại một lần nữa cấu trúc
+      console.log("Dữ liệu thực tế từ API:", response.data);
+
+      // Truy cập vào đúng cấp dữ liệu dựa trên image_8506f2.png
+      const result = response.data;
+
+      // Kiểm tra nếu có user (vì ảnh console cho thấy user nằm trong result.data)
+      if (result && result.data && result.data.user) {
+        const userData = result.data.user;
+
+        // LƯU Ý: Nếu API trả về token ở chỗ khác, hãy gán đúng biến đó.
+        // Nếu hiện tại API chưa trả về token, bạn cần kiểm tra lại AuthController ở Laravel.
+        const token = result.token || result.data.token || "fake-token-de-test";
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        // Cập nhật state ngay lập tức
+        setCurrentUser(userData);
+        return true;
       }
+
       return false;
     } catch (err) {
-      // Lấy thông báo từ server hoặc mặc định
-      const errMsg = err.response?.data?.message || "Sai thông tin đăng nhập";
-      console.error("Lỗi đăng nhập chi tiết:", errMsg);
+      console.error(
+        "Lỗi đăng nhập:",
+        err.response?.data?.message || "Lỗi hệ thống"
+      );
       return false;
     } finally {
       setLoading(false);

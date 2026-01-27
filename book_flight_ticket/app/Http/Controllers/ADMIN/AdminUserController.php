@@ -105,4 +105,27 @@ public function bookingHistory($id)
         return response()->json(['message' => 'Lỗi lấy lịch sử: ' . $e->getMessage()], 500);
     }
 }
+// Thêm mới User (Mặc định set role = 1 để làm quản trị viên)
+public function store(StoreUserRequest $request) 
+{
+    $validated = $request->validated();
+    
+    DB::beginTransaction();
+    try {
+        $user = new User();
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->phone = $validated['phone'] ?? null;
+        $user->address = $validated['address'] ?? null;
+        $user->password = Hash::make($validated['password']);
+        $user->role = 1; // Mặc định là Admin khi tạo từ trang quản trị
+        $user->save();
+
+        DB::commit();
+        return response()->json(['message' => 'Thêm quản trị viên thành công.', 'data' => $user], 201);
+    } catch (Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
+    }
+}
 }

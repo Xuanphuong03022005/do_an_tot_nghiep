@@ -99,13 +99,11 @@ function Header({ value, onSelectFlight, user, onLogout }) {
                 </div>
               ) : (
                 <div className="nav-item_lg">
-                  <a onClick={() => navigate("/login")} className="login">
-                    Đăng nhập
-                  </a>
-                  <a onClick={() => navigate("/register")} className="register">
-                    Đăng ký
-                  </a>
-                  <FaUserCircle className="icon user-icon" />
+                  <a onClick={() => navigate("/login")} className="login"></a>
+                  <a
+                    onClick={() => navigate("/register")}
+                    className="register"
+                  ></a>
                 </div>
               )}
             </div>

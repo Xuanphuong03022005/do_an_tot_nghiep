@@ -1,404 +1,287 @@
 import React, { useState, useEffect } from "react";
 import authApi from "../api/authApi";
+import "./admin.css";
 
 function UserManager() {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [showModal, setShowModal] = useState(false);
-    const [history, setHistory] = useState([]);
-    const modalOverlayStyle = {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(0, 0, 0, 0.5)", // Lớp nền tối phía sau
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
-    };
+  // Modals state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-    const modalContentStyle = {
-        backgroundColor: "#fff",
-        padding: "25px",
-        borderRadius: "12px",
-        width: "800px", // Độ rộng phù hợp để hiển thị bảng lịch sử
-        maxHeight: "85vh",
-        overflowY: "auto", // Tự động tạo thanh cuộn nếu danh sách quá dài
-        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
-        position: "relative",
-    };
-    const fetchUsers = async (email = "") => {
-        setLoading(true);
-        try {
-            const res = await authApi.getAllUsers(email);
-            // axiosClient đã bóc tách response.data nên res là dữ liệu thực tế
-            const finalData = res.data || res || [];
-            setUsers(Array.isArray(finalData) ? finalData : []);
-        } catch (err) {
-            console.error("Lỗi kết nối API:", err);
-            setUsers([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const [history, setHistory] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    address: "",
+    role: 0,
+  });
 
-    useEffect(() => {
+  const fetchUsers = async (email = "") => {
+    setLoading(true);
+    try {
+      const res = await authApi.getAllUsers(email);
+      setUsers(res.data || res || []);
+    } catch (err) {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Xóa User
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc muốn xóa người dùng này?")) {
+      try {
+        await authApi.deleteUser(id); // Giả sử bạn đã định nghĩa trong authApi
+        alert("Xóa thành công");
         fetchUsers();
-    }, []);
+      } catch (err) {
+        alert("Xóa thất bại");
+      }
+    }
+  };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        fetchUsers(searchTerm);
-    };
+  // Mở modal sửa
+  const handleEditClick = (user) => {
+    setSelectedUser(user);
+    setFormData({ ...user, password: "" }); // Reset password field để trống
+    setShowEditModal(true);
+  };
 
-    const viewHistory = async (userId) => {
-        try {
-            const res = await authApi.getUserHistory(userId);
-            // Dữ liệu từ API mới sẽ là mảng các đơn hàng (bookings)
-            setHistory(res.data || res || []);
-            setShowModal(true);
-        } catch (err) {
-            alert("Người dùng này chưa có lịch sử đặt vé.");
-        }
-    };
+  // Gửi yêu cầu cập nhật (Sửa/Reset MK)
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      // Chuyển role sang kiểu Number để tránh lỗi validate type
+      const updatedData = { ...formData, role: Number(formData.role) };
 
-    if (loading)
-        return <div className="p-4 text-center">Đang kết nối hệ thống...</div>;
+      // Nếu password trống thì xóa khỏi object gửi đi để Laravel không validate min:6
+      if (!updatedData.password) {
+        delete updatedData.password;
+      }
 
-    return (
-        <div
-            className="manager-container"
-            style={{
-                padding: "20px",
-                backgroundColor: "#fff",
-                borderRadius: "8px",
+      await authApi.updateUser(selectedUser.id, updatedData);
+      alert("Cập nhật thành công!");
+      setShowEditModal(false);
+      fetchUsers();
+    } catch (err) {
+      console.error(err.response?.data); // Xem lỗi cụ thể từ server
+      alert("Lỗi cập nhật: " + (err.response?.data?.message || ""));
+    }
+  };
+
+  // Gửi yêu cầu thêm Admin
+  const handleAddAdmin = async (e) => {
+    e.preventDefault();
+    try {
+      const newAdmin = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone || "0000000000", // Laravel có thể yêu cầu phone
+        role: 1, // Ép quyền Quản trị viên
+      };
+
+      await authApi.createUser(newAdmin);
+      alert("Thêm Admin thành công!");
+      setShowAddModal(false);
+      fetchUsers();
+    } catch (err) {
+      alert(
+        "Thêm thất bại: " +
+          (err.response?.data?.message || "Kiểm tra lại dữ liệu")
+      );
+    }
+  };
+
+  return (
+    <div className="user-manager-container">
+      <div className="user-header-section">
+        <h3>Quản lý người dùng hệ thống</h3>
+        <div className="flex-actions" style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="user-search-btn"
+            style={{ backgroundColor: "#28a745" }}
+            onClick={() => setShowAddModal(true)}
+          >
+            Thêm
+          </button>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              fetchUsers(searchTerm);
             }}
-        >
-            <div
-                className="header-section"
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "20px",
-                }}
-            >
-                <h3 style={{ margin: 0 }}>Quản lý người dùng hệ thống</h3>
-                <form onSubmit={handleSearch} style={{ display: "flex" }}>
-                    <input
-                        type="text"
-                        placeholder="Tìm theo email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            padding: "8px",
-                            border: "1px solid #ddd",
-                            borderRadius: "4px 0 0 4px",
-                            width: "250px",
-                        }}
-                    />
-                    <button
-                        type="submit"
-                        style={{
-                            padding: "8px 20px",
-                            backgroundColor: "#007bff",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "0 4px 4px 0",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Tìm kiếm
-                    </button>
-                </form>
-            </div>
-
-            <table width="100%" style={{ borderCollapse: "collapse" }}>
-                <thead>
-                    <tr
-                        style={{
-                            backgroundColor: "#f8f9fa",
-                            borderBottom: "2px solid #dee2e6",
-                        }}
-                    >
-                        <th style={{ padding: "12px", textAlign: "left" }}>
-                            ID
-                        </th>
-                        <th style={{ padding: "12px", textAlign: "left" }}>
-                            Tên hành khách
-                        </th>
-                        <th style={{ padding: "12px", textAlign: "left" }}>
-                            Email
-                        </th>
-                        {/* Thêm tiêu đề cột mới */}
-                        <th style={{ padding: "12px", textAlign: "left" }}>
-                            Số điện thoại
-                        </th>
-                        <th style={{ padding: "12px", textAlign: "left" }}>
-                            Địa chỉ
-                        </th>
-                        <th style={{ padding: "12px", textAlign: "center" }}>
-                            Thao tác
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.length > 0 ? (
-                        users.map((user) => (
-                            <tr
-                                key={user.id}
-                                style={{ borderBottom: "1px solid #eee" }}
-                            >
-                                <td style={{ padding: "12px" }}>{user.id}</td>
-                                <td style={{ padding: "12px" }}>
-                                    <strong>{user.name}</strong>
-                                </td>
-                                <td style={{ padding: "12px" }}>
-                                    {user.email}
-                                </td>
-                                {/* Hiển thị dữ liệu Phone và Address */}
-                                <td style={{ padding: "12px" }}>
-                                    {user.phone || "N/A"}
-                                </td>
-                                <td
-                                    style={{
-                                        padding: "12px",
-                                        maxWidth: "200px",
-                                        wordBreak: "break-word",
-                                    }}
-                                >
-                                    {user.address || "N/A"}
-                                </td>
-                                <td
-                                    style={{
-                                        padding: "12px",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    <button
-                                        onClick={() => viewHistory(user.id)}
-                                        style={{
-                                            background: "none",
-                                            border: "none",
-                                            color: "#007bff",
-                                            textDecoration: "underline",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        Lịch sử bay
-                                    </button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td
-                                colSpan="6"
-                                style={{ padding: "30px", textAlign: "center" }}
-                            >
-                                Không có dữ liệu. Hãy kiểm tra Route Laravel
-                                (404).
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-
-            {showModal && (
-                <div style={modalOverlayStyle}>
-                    <div style={modalContentStyle}>
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                marginBottom: "15px",
-                            }}
-                        >
-                            <h4 style={{ margin: 0 }}>
-                                Lịch sử đặt vé khách hàng #{history[0]?.user_id}
-                            </h4>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                style={{
-                                    border: "none",
-                                    background: "none",
-                                    cursor: "pointer",
-                                    fontSize: "20px",
-                                }}
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <table
-                            width="100%"
-                            style={{
-                                borderCollapse: "collapse",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <thead>
-                                <tr
-                                    style={{
-                                        backgroundColor: "#f8f9fa",
-                                        borderBottom: "2px solid #eee",
-                                    }}
-                                >
-                                    <th
-                                        style={{
-                                            padding: "10px",
-                                            textAlign: "left",
-                                        }}
-                                    >
-                                        Mã PNR
-                                    </th>
-                                    <th
-                                        style={{
-                                            padding: "10px",
-                                            textAlign: "left",
-                                        }}
-                                    >
-                                        Chuyến bay
-                                    </th>
-                                    <th
-                                        style={{
-                                            padding: "10px",
-                                            textAlign: "left",
-                                        }}
-                                    >
-                                        Hạng ghế
-                                    </th>
-                                    <th
-                                        style={{
-                                            padding: "10px",
-                                            textAlign: "left",
-                                        }}
-                                    >
-                                        Tổng tiền
-                                    </th>
-                                    <th
-                                        style={{
-                                            padding: "10px",
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        Trạng thái
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {history.length > 0 ? (
-                                    history.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            style={{
-                                                borderBottom: "1px solid #eee",
-                                            }}
-                                        >
-                                            <td style={{ padding: "10px" }}>
-                                                <strong>{item.pnr_code}</strong>
-                                            </td>
-                                            <td style={{ padding: "10px" }}>
-                                                {/* Hiển thị số hiệu chuyến bay từ quan hệ ticket.flight */}
-                                                {item.ticket?.flight
-                                                    ?.flight_number || "N/A"}
-                                                <br />
-                                                <small
-                                                    style={{ color: "#666" }}
-                                                >
-                                                    {
-                                                        item.ticket?.flight
-                                                            ?.departure_time
-                                                    }
-                                                </small>
-                                            </td>
-                                            <td style={{ padding: "10px" }}>
-                                                {item.ticket?.seat_class
-                                                    ?.name || "N/A"}
-                                            </td>
-                                            <td style={{ padding: "10px" }}>
-                                                {/* Sử dụng total_final theo đúng cấu trúc bảng bookings của bạn */}
-                                                {item.total_final
-                                                    ? parseInt(
-                                                          item.total_final
-                                                      ).toLocaleString()
-                                                    : 0}
-                                                đ
-                                            </td>
-                                            <td
-                                                style={{
-                                                    padding: "10px",
-                                                    textAlign: "center",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        padding: "4px 8px",
-                                                        borderRadius: "4px",
-                                                        fontSize: "12px",
-                                                        fontWeight: "bold",
-                                                        backgroundColor:
-                                                            item.status ===
-                                                                "success" ||
-                                                            item.status ===
-                                                                "ticketed"
-                                                                ? "#d4edda"
-                                                                : item.status ===
-                                                                  "pending"
-                                                                ? "#fff3cd"
-                                                                : "#f8d7da",
-                                                        color:
-                                                            item.status ===
-                                                                "success" ||
-                                                            item.status ===
-                                                                "ticketed"
-                                                                ? "#155724"
-                                                                : item.status ===
-                                                                  "pending"
-                                                                ? "#856404"
-                                                                : "#721c24",
-                                                    }}
-                                                >
-                                                    {item.status
-                                                        ? item.status.toUpperCase()
-                                                        : "N/A"}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan="5"
-                                            style={{
-                                                padding: "20px",
-                                                textAlign: "center",
-                                            }}
-                                        >
-                                            Không có dữ liệu bay
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-
-                        <div style={{ textAlign: "right", marginTop: "20px" }}>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="btn-close-modal"
-                            >
-                                Đóng
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            className="user-search-form"
+          >
+            <input
+              type="text"
+              className="user-search-input"
+              placeholder="Tìm email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button type="submit" className="user-search-btn">
+              Tìm kiếm
+            </button>
+          </form>
         </div>
-    );
+      </div>
+
+      <table className="user-main-table">
+        <thead className="user-table-head">
+          <tr>
+            <th>ID</th>
+            <th>Tên hành khách</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th style={{ textAlign: "center" }}>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id} className="user-table-tr">
+              <td>{user.id}</td>
+              <td>
+                <strong>{user.name}</strong>
+              </td>
+              <td>{user.email}</td>
+              <td>
+                {user.role === 1 ? (
+                  <span className="badge-admin">Admin</span>
+                ) : (
+                  "quản trị"
+                )}
+              </td>
+              <td style={{ textAlign: "center" }}>
+                <button
+                  onClick={() => handleEditClick(user)}
+                  className="btn-edit"
+                >
+                  Sửa
+                </button>
+                <button
+                  onClick={() => handleDelete(user.id)}
+                  className="btn-delete"
+                >
+                  Xóa
+                </button>
+                {/* <button
+                  onClick={async () => {
+                    const res = await authApi.getUserHistory(user.id);
+                    setHistory(res.data || []);
+                    setShowHistoryModal(true);
+                  }}
+                  className="user-btn-history"
+                >
+                  Lịch sử
+                </button> */}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* MODAL THÊM ADMIN */}
+      {showAddModal && (
+        <div className="user-modal-overlay">
+          <div className="user-modal-content">
+            <h4>Thêm quản trị viên mới</h4>
+            <form onSubmit={handleAddAdmin}>
+              <input
+                type="text"
+                placeholder="Tên"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+              <input
+                type="password"
+                placeholder="Mật khẩu"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowAddModal(false)}>
+                  Hủy
+                </button>
+                <button type="submit" className="btn-save">
+                  Lưu
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SỬA/RESET MK */}
+      {showEditModal && (
+        <div className="user-modal-overlay">
+          <div className="user-modal-content">
+            <h4>Chỉnh sửa người dùng: {selectedUser.name}</h4>
+            <form onSubmit={handleUpdate}>
+              <label>Tên:</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+              <label>Mật khẩu mới (Để trống nếu không đổi):</label>
+              <input
+                type="password"
+                placeholder="Nhập mật khẩu mới..."
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+              <label>Vai trò:</label>
+              <select
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
+              >
+                <option value={0}>Khách hàng</option>
+                <option value={1}>Quản trị viên</option>
+              </select>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowEditModal(false)}>
+                  Hủy
+                </button>
+                <button type="submit" className="btn-save">
+                  Cập nhật
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default UserManager;

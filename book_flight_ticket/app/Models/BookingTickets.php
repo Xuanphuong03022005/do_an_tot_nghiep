@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Models;
-
+use App\Models\SeatClasses;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BookingTickets extends Model
 {
     protected $fillable = [
@@ -31,4 +31,9 @@ class BookingTickets extends Model
     {
         return $this->belongsTo(Flights::class, 'flight_id', 'id');
     }   
+    public function seatClass(): BelongsTo
+    {
+        // Giả sử khóa ngoại trong bảng booking_tickets là seat_class_id
+        return $this->belongsTo(SeatClasses::class, 'seat_class_id');
+    }
 }

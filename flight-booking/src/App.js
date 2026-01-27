@@ -1,16 +1,24 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import useAuth from "./components/login/useAuth";
 
 import Login from "./components/login/Login";
-import Register from "./components/login/Register";
-import Home from "./components/home/Home";
-import FlightInfo from "./components/flightInfo/FlightInfo";
-import Ticket from "./components/ticket/Ticket";
-import Form from './components/form/Form';
-import PaymentReview from "./components/allservice/PaymentReview";
+
 
 import AdminDashboard from "./components/admin/AdminDashboard";
 import UserLayout from "./components/layout/UserLayout";
+
+// --- Component bảo vệ Route ---
+const AdminRoute = ({ children }) => {
+  const savedUser = localStorage.getItem("user");
+  const user = savedUser ? JSON.parse(savedUser) : null;
+
+  // Sử dụng parseInt để ép kiểu về số trước khi so sánh
+  if (!user || parseInt(user.role) !== 1) {
+    alert("Bạn không có quyền Admin!");
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 function App() {
   const {
@@ -24,8 +32,15 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* ===== ADMIN ===== */}
-        <Route path="/" element={<AdminDashboard />} />
+        {/* ===== ADMIN - ĐÃ ĐƯỢC BẢO VỆ ===== */}
+        <Route
+          path="adm"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
 
         {/* ===== USER ===== */}
         <Route
@@ -36,13 +51,9 @@ function App() {
             />
           }
         >
-          <Route path="/home" element={<Home />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register onRegister={handleRegister} />} />
-          <Route path="/flight-info" element={<FlightInfo />} />
-          <Route path="/my-ticket" element={<Ticket />} />
-          <Route path="/info" element={<Form />} />
-          <Route path="/review" element={<PaymentReview />} />
+
+          <Route path="/" element={<Login onLogin={handleLogin} />} />
+
         </Route>
 
       </Routes >

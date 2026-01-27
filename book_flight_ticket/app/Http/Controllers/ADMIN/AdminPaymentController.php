@@ -39,11 +39,24 @@ public function index(Request $request)
         $bookings = Bookings::where('status', 'pending')->get();
         return response()->json($bookings);
     }
-    public function bookingPendingDetail($id)
-    {
-        $bookings = Bookings::where('id', $id)->with('payments')->first();
-        return response()->json($bookings);
+   // AdminPaymentController.php
+
+public function bookingPendingDetail($id)
+{
+    // Lấy đơn hàng kèm theo thanh toán và danh sách tất cả vé (có thông tin hành khách, chuyến bay)
+    $booking = Bookings::where('id', $id)->with([
+        'payments',
+        'bookingTickets.passenger', // Lấy thông tin khách hàng đi máy bay
+        'bookingTickets.flight',    // Lấy thông tin chuyến bay
+        'bookingTickets.seatClass'  // Lấy hạng ghế (đã sửa tên model ở câu trước)
+    ])->first();
+
+    if (!$booking) {
+        return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
     }
+
+    return response()->json($booking);
+}
     public function changeStatus(Request $request, $id)
     {
 

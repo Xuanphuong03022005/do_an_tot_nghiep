@@ -34,7 +34,6 @@ const FlightManager = () => {
     fetchInitialData();
   }, []);
 
-
   // 1. Load dữ liệu ban đầu
   const fetchInitialData = async () => {
     try {
@@ -106,7 +105,6 @@ const FlightManager = () => {
     );
     setSelectedAirlineTickets(updatedTickets);
   };
-
 
   // 5. Submit thêm chuyến bay mới
   const handleSubmit = async (e) => {
@@ -340,7 +338,6 @@ const FlightManager = () => {
                               `Hạng ${ticket.class_id}`}
                           </strong>
                           <div style={{ fontSize: "12px", color: "#666" }}>
-
                             {/* HIỂN THỊ THÊM HÀNG GHẾ TẠI ĐÂY */}
                             Số lượng: {ticket.total_seats} ghế (
                             {ticket.row_start} - {ticket.row_end})
@@ -351,14 +348,12 @@ const FlightManager = () => {
                             type="number"
                             placeholder="Nhập giá vé (VNĐ)"
                             required
-
                             style={{
                               width: "150px",
                               padding: "5px",
                               border: "1px solid #ccc",
                               borderRadius: "4px",
                             }}
-
                             value={ticket.inputPrice}
                             onChange={(e) =>
                               handlePriceChange(ticket.id, e.target.value)

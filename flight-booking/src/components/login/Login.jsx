@@ -37,7 +37,7 @@ const Login = ({ onLogin }) => {
     const success = await onLogin(email, password); // Cần await ở đây
 
     if (success) {
-      navigate("/"); // Chuyển trang chủ khi thành công
+      navigate("adm"); // Chuyển trang chủ khi thành công
     } else {
       alert("Email hoặc Mật Khẩu không chính xác.");
     }
@@ -97,12 +97,12 @@ const Login = ({ onLogin }) => {
             Đăng Nhập
           </button>
         </form>
-        <p className="switch-link">
+        {/* <p className="switch-link">
           Chưa là Hội viên?
           <Link to="/register" style={{ cursor: "pointer", marginLeft: "5px" }}>
             Đăng ký ngay
           </Link>
-        </p>
+        </p> */}
       </div>
     </div>
   );

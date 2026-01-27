@@ -20,14 +20,11 @@ axiosClient.interceptors.request.use(
 );
 
 // 👉 Bắt lỗi response (401, 403...)
-axiosClient.interceptors.response.use(
-    (response) => response.data,
-    (error) => {
-        if (error.response?.status === 401) {
-            console.log("Unauthorized – cần login lại");
-        }
-        return Promise.reject(error);
+axiosClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-);
-
+    return config;
+});
 export default axiosClient;

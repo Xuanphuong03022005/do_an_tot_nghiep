@@ -121,18 +121,29 @@ public function store(Request $request) {
         }
     }
 
-  public function destroy($id)
+ public function destroy($id)
 {
     $ticket = Tickets::find($id);
     if (!$ticket) {
         return response()->json(['message' => 'Ticket không tồn tại.'], 404);
     }
+
+    DB::beginTransaction();
     try {
-        // Sửa từ delete() thành forceDelete() để xóa hẳn khỏi DB
+        // 1. Giải phóng hạng ghế trong bảng seats vật lý trước khi xóa cấu hình
+        DB::table('seats')
+            ->where('airline_id', $ticket->airline_id)
+            ->whereBetween('row_number', [$ticket->row_start, $ticket->row_end])
+            ->update(['seat_class_id' => null]);
+
+        // 2. Xóa hẳn bản ghi cấu hình vé
         $ticket->forceDelete(); 
-        return response()->json(['message' => 'Xóa vĩnh viễn thành công.'], 200);
-    } catch (Exception $e) {
-        return response()->json(['message' => 'Xóa thất bại.'], 500);
+
+        DB::commit();
+        return response()->json(['message' => 'Xóa cấu hình và giải phóng hàng ghế thành công.'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Xóa thất bại: ' . $e->getMessage()], 500);
     }
 }
   

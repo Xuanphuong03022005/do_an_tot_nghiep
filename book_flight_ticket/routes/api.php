@@ -48,7 +48,14 @@ Route::prefix('admin')->group(function () {
     Route::get('/flights-by-date', [AdminFlightsController::class, 'getFlightsByDate']);
     //user
     Route::get('/users', [AdminUserController::class, 'index']);
-    Route::put('/users/{id}', [AdminUserController::class, 'update']);
+    Route::post('/users', [AdminUserController::class, 'store']);     // Cho chức năng THÊM
+    Route::put('/users/{id}', [AdminUserController::class, 'update']); // Cho chức năng SỬA
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy']); // Cho chức năng XÓA
+    
+    Route::post('/users', [AdminUserController::class, 'store']); // Thêm dòng này để cho phép POST (Thêm mới)
+    Route::put('/users/{id}', [AdminUserController::class, 'update']); // Đảm bảo đã có dòng này để cho phép cập nhật
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+    Route::get('/users/{id}/history', [AdminUserController::class, 'bookingHistory']);
     //baggage rules
     Route::post('baggage-rules',[AdminBaggageRuleController::class, 'store']);
     Route::get('baggage-rules',[AdminBaggageRuleController::class, 'index']);
@@ -73,14 +80,15 @@ Route::prefix('admin')->group(function () {
     Route::put('/change-status-booking/{id}', [AdminPaymentController::class, 'changeStatus']);
     //tickets
     Route::get('/tickets', [AdminTicketController::class, 'index']);
- 
+    Route::delete('/tickets/{id}', [AdminTicketController::class, 'destroy']);
+     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::post('/tickets', [AdminTicketController::class, 'store']);
+    Route::put('/tickets/{id}', [AdminTicketController::class, 'update']);
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);
     Route::post('/login', [UserController::class, 'login']);
-    Route::get('/tickets', [TicketController::class, 'index']);
-    Route::get('/tickets/{id}', [TicketController::class, 'show']);
+    
     //booking
     Route::post('/booking', [BookingController::class, 'store']);
     //payment 

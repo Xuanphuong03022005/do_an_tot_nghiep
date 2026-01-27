@@ -1,9 +1,7 @@
 import axiosClient from "./axiosClient";
 
 const authApi = {
-    register(data) {
-        return axiosClient.post("/register", data);
-    },
+
     login(data) {
         return axiosClient.post("/login", data);
     },
@@ -13,9 +11,14 @@ const authApi = {
         // Nếu có email thì gửi query string ?email=...
         return axiosClient.get(`/admin/users${email ? `?email=${email}` : ""}`);
     },
-    getUserHistory(userId) {
-        // Thêm /admin vào trước /users
-        return axiosClient.get(`/admin/users/${userId}/history`);
+    createUser(data) {
+        return axiosClient.post("/admin/users", data);
+    },
+    updateUser(id, data) {
+        return axiosClient.put(`/admin/users/${id}`, data);
+    },
+    deleteUser(id) {
+        return axiosClient.delete(`/admin/users/${id}`);
     }
 };
 

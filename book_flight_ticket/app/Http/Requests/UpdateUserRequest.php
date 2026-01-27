@@ -13,13 +13,17 @@ class UpdateUserRequest extends FormRequest
 
     public function rules()
     {
+        // Lấy ID người dùng từ route để loại trừ khi kiểm tra unique email
+        $userId = $this->route('id');
+
         return [
             'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email',
-            'password' => 'sometimes|nullable|string|min:6',
-            'phone' => 'sometimes|nullable|string|max:50',
-            'address' => 'sometimes|nullable|string|max:500',
-            'role' => 'sometimes|nullable|string'
+            // Quan trọng: Phải thêm ",email," . $userId để không bị lỗi "Email đã tồn tại" khi giữ nguyên email cũ
+            'email' => 'sometimes|required|email|unique:users,email,' . $userId,
+            'password' => 'nullable|string|min:6',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:500',
+            'role' => 'sometimes|integer' // Sửa thành integer vì DB của bạn lưu số (0 hoặc 1)
         ];
     }
 

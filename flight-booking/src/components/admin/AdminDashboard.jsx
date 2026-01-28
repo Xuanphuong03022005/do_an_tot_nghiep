@@ -9,6 +9,7 @@ import BookingManager from "./BookingManager";
 import SeatClassManager from "./SeatClassManager";
 import AirportsManager from "./AirportsManager";
 import AirlineTicketManager from "./AirlineTicketManager"; // 1. Import Component mới
+import BaggageManagement from "./BaggageManagement"; // 1. Import Component mới
 import ContentArea from "./ContentArea";
 import DashboardCharts from "./DashboardCharts";
 
@@ -37,8 +38,10 @@ function AdminDashboard() {
         return <SeatClassManager />;
       case "airline":
         return <AirportsManager />;
+      case "Baggage":
+        return <BaggageManagement />;
 
-      case "ticket-classes": // 2. Thêm case cho Quản lý Hạng vé
+      case "ticket-classes":
         return <AirlineTicketManager />;
       case "bookings":
         return <BookingManager />;

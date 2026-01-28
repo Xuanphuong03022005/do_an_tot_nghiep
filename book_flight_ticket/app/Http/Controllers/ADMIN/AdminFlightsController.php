@@ -98,7 +98,7 @@ class AdminFlightsController extends Controller
         }
         SeatFlights::insert($seatByFlights);
 
-        // 5. TẠO VÉ (TICKETS) - CHỈ LÀM BƯỚC NÀY ĐỂ TRÁNH NHÂN ĐÔI
+        
         // Kế thừa dải hàng (row_start, row_end) từ cấu hình máy bay
         foreach ($airlineConfigs as $config) {
             $price = $this->PriceSeatBySeatclasses($config->class_id, $outbound['seat_classes']);

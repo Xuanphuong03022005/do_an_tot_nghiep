@@ -63,6 +63,7 @@ Route::prefix('admin')->group(function () {
     Route::delete('baggage-rules/{id}',[AdminBaggageRuleController::class, 'destroy']);
     Route::get('baggage-rules/{id}',[AdminBaggageRuleController::class, 'show']);
     Route::get('baggage-rules-by-class/{id}',[AdminBaggageRuleController::class, 'getByClass']);
+ 
     //baggage_package
     Route::prefix('baggage-packages')->group(function () {
     Route::get('/', [AdminBaggagePackageController::class, 'index']);

@@ -606,6 +606,27 @@ h3 {
   text-align: center;
 }
 
+.btn-tab {
+  padding: 10px 20px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+.btn-tab.active {
+  background: #007bff;
+  color: white;
+  border-radius: 5px 5px 0 0;
+}
+.badge-class {
+  background: #e3f2fd;
+  color: #0d47a1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
 .user-table-td {
   padding: 12px;
 }

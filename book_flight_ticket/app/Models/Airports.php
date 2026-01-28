@@ -14,6 +14,7 @@ class Airports extends Model
         'city',
         'name'
     ];
+    // 1-n 1 sân bay nơi khởi hành nhiều chuyến bay
     public function depatureflight(){
         return $this->hasMany(Flights::class, 'departure_airport_id');
     }

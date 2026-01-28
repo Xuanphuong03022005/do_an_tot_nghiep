@@ -79,6 +79,8 @@ Route::prefix('admin')->group(function () {
     Route::post('/login', [UserController::class, 'login']);
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
+    //get ticket by flight
+    Route::get('/ticket-by-flight', [TicketController::class, 'search']);
     //booking
     Route::post('/booking', [BookingController::class, 'store']);
     //payment 

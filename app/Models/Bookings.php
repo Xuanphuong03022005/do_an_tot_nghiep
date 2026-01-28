@@ -24,4 +24,5 @@ class Bookings extends Model
     {
         return $this->hasMany(BookingTickets::class, 'booking_id', 'id');
     }
+    
 }

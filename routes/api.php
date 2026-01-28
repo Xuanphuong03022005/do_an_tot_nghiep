@@ -6,6 +6,7 @@ use App\Http\Controllers\ADMIN\AdminAirpotsController;
 use App\Http\Controllers\ADMIN\AdminBaggagePackageController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
 use App\Http\Controllers\ADMIN\AdminBookingController;
+use App\Http\Controllers\ADMIN\AdminDashboardContrroller;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminPaymentController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
@@ -70,6 +71,8 @@ Route::prefix('admin')->group(function () {
     Route::get('/bookings', [AdminBookingController::class, 'index']);
     //tickets
     Route::get('/tickets', [AdminTicketController::class, 'index']);
+    //dashboard
+    Route::get('/dashboard/revenue-by-ticket-class', [AdminDashboardContrroller::class, 'revenueByTicketClass']);
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);

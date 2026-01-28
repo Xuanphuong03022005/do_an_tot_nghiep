@@ -49,19 +49,19 @@ Route::prefix('admin')->group(function () {
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::put('/users/{id}', [AdminUserController::class, 'update']);
     //baggage rules
-    Route::post('baggage-rules',[AdminBaggageRuleController::class, 'store']);
-    Route::get('baggage-rules',[AdminBaggageRuleController::class, 'index']);
-    Route::put('baggage-rules/{id}',[AdminBaggageRuleController::class, 'update']);
-    Route::delete('baggage-rules/{id}',[AdminBaggageRuleController::class, 'destroy']);
-    Route::get('baggage-rules/{id}',[AdminBaggageRuleController::class, 'show']);
-    Route::get('baggage-rules-by-class/{id}',[AdminBaggageRuleController::class, 'getByClass']);
+    Route::post('baggage-rules', [AdminBaggageRuleController::class, 'store']);
+    Route::get('baggage-rules', [AdminBaggageRuleController::class, 'index']);
+    Route::put('baggage-rules/{id}', [AdminBaggageRuleController::class, 'update']);
+    Route::delete('baggage-rules/{id}', [AdminBaggageRuleController::class, 'destroy']);
+    Route::get('baggage-rules/{id}', [AdminBaggageRuleController::class, 'show']);
+    Route::get('baggage-rules-by-class/{id}', [AdminBaggageRuleController::class, 'getByClass']);
     //baggage_package
     Route::prefix('baggage-packages')->group(function () {
-    Route::get('/', [AdminBaggagePackageController::class, 'index']);
-    Route::get('/{id}', [AdminBaggagePackageController::class, 'show']);
-    Route::post('/', [AdminBaggagePackageController::class, 'store']);
-    Route::put('/{id}', [AdminBaggagePackageController::class, 'update']);
-    Route::delete('/{id}', [AdminBaggagePackageController::class, 'destroy']);
+        Route::get('/', [AdminBaggagePackageController::class, 'index']);
+        Route::get('/{id}', [AdminBaggagePackageController::class, 'show']);
+        Route::post('/', [AdminBaggagePackageController::class, 'store']);
+        Route::put('/{id}', [AdminBaggagePackageController::class, 'update']);
+        Route::delete('/{id}', [AdminBaggagePackageController::class, 'destroy']);
     });
     //payment - booking pending
     Route::get('/booking-pending', [AdminPaymentController::class, 'bookingPending']);
@@ -72,16 +72,20 @@ Route::prefix('admin')->group(function () {
     //tickets
     Route::get('/tickets', [AdminTicketController::class, 'index']);
     //dashboard
-    Route::get('/dashboard/revenue-by-ticket-class', [AdminDashboardContrroller::class, 'revenueByTicketClass']);
+    Route::get('/dashboard', [AdminDashboardContrroller::class, 'index']);
+    Route::get('/dashboard/revenue-by-class', [AdminDashboardContrroller::class, 'revenueByTicketClass']);
+    Route::get('/dashboard/revenue-by-aircraft', [AdminDashboardContrroller::class, 'revenueByAircraft']);
+    Route::get('/dashboard/revenue-by-date', [AdminDashboardContrroller::class, 'revenueByDate']);
+    Route::get('/dashboard/revenue-by-route', [AdminDashboardContrroller::class, 'revenueByRoute']);
 });
-    Route::post('/user', [UserController::class, 'store']);
-    Route::put('/user/{id}', [UserController::class, 'update']);
-    Route::post('/login', [UserController::class, 'login']);
-    Route::get('/tickets', [TicketController::class, 'index']);
-    Route::get('/tickets/{id}', [TicketController::class, 'show']);
-    //get ticket by flight
-    Route::get('/ticket-by-flight', [TicketController::class, 'search']);
-    //booking
-    Route::post('/booking', [BookingController::class, 'store']);
-    //payment 
-    Route::post('/payment', [PaymentController::class, 'store']);
+Route::post('/user', [UserController::class, 'store']);
+Route::put('/user/{id}', [UserController::class, 'update']);
+Route::post('/login', [UserController::class, 'login']);
+Route::get('/tickets', [TicketController::class, 'index']);
+Route::get('/tickets/{id}', [TicketController::class, 'show']);
+//get ticket by flight
+Route::get('/ticket-by-flight', [TicketController::class, 'search']);
+//booking
+Route::post('/booking', [BookingController::class, 'store']);
+//payment 
+Route::post('/payment', [PaymentController::class, 'store']);

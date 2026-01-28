@@ -89,6 +89,7 @@ class BookingController extends Controller
                     $bookingTicketOutbound = BookingTickets::create([
                         'booking_id' => $booking->id,
                         'ticket_id' => $value['ticket_id'],
+                        'total_price' => $passenger['total_price'],
                         'passenger_id' => $dataPassenger->id,
                         'flight_id' => $data['outbound_flight_id'],
                         'class_id' => $value['class_id'],
@@ -104,6 +105,7 @@ class BookingController extends Controller
                         }
                         $bookingTicketReturn = BookingTickets::create([
                             'booking_id' => $booking->id,
+                            'total_price' => $passenger['total_price'],
                             'ticket_id' => $ticketReturn->id,
                             'passenger_id' => $dataPassenger->id,
                             'flight_id' => $data['return_flight_id'],

@@ -17,7 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('ticket_id');
             $table->unsignedBigInteger('passenger_id');
             $table->unsignedBigInteger('flight_id');
-            $table->string('class_id');
+            $table->unsignedBigInteger('class_id');
+            $table->integer('total_price');
             $table->string('type')->enum('outbound','return');
             $table->timestamps();
             $table->softDeletes();

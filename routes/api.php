@@ -15,6 +15,7 @@ use App\Http\Controllers\ADMIN\AdminTicketController;
 use App\Http\Controllers\ADMIN\AdminUserController;
 use App\Http\Controllers\Client\AirportController;
 use App\Http\Controllers\CLIENT\BookingController;
+use App\Http\Controllers\Client\ClassesController;
 use App\Http\Controllers\CLIENT\PaymentController;
 use App\Http\Controllers\CLIENT\TicketController;
 use App\Http\Controllers\CLIENT\UserController;
@@ -92,4 +93,7 @@ Route::post('/booking', [BookingController::class, 'store']);
 Route::post('/payment', [PaymentController::class, 'store']);
 //airport
 Route::get('/airports', [AirportController::class, 'index']);
+//seat classes
+Route::get('/seat-classes', [ClassesController::class, 'index']);
+
 

@@ -14,6 +14,8 @@ use App\Http\Controllers\ADMIN\AdminSeatController;
 use App\Http\Controllers\ADMIN\AdminTicketController;
 use App\Http\Controllers\ADMIN\AdminUserController;
 use App\Http\Controllers\Client\AirportController;
+use App\Http\Controllers\Client\BaggagePackageController;
+use App\Http\Controllers\Client\BaggeRuleController;
 use App\Http\Controllers\CLIENT\BookingController;
 use App\Http\Controllers\Client\ClassesController;
 use App\Http\Controllers\CLIENT\PaymentController;
@@ -95,5 +97,8 @@ Route::post('/payment', [PaymentController::class, 'store']);
 Route::get('/airports', [AirportController::class, 'index']);
 //seat classes
 Route::get('/seat-classes', [ClassesController::class, 'index']);
-
+//baggage_rules chính là quyền lợi được đem theo hành lý theo từng hạng ghế
+Route::get('/baggage-rules', [BaggeRuleController::class, 'index']);
+//baggage_packages chính là dùng để quy định giá tiền bán thêm cho hành lý ký gửi vượt mức quy định
+Route::get('/baggage-packages', [BaggagePackageController::class, 'index']);
 

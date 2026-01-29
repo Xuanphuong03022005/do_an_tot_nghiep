@@ -73,6 +73,9 @@ class BookingController extends Controller
             foreach ($data['tickets'] as $value) {
                 $passengers = $value['passengers'];
                 foreach ($passengers as $passenger) {
+                    // Check if passenger is infant (under 2 years old)
+                    $isInfant = $passenger['type'] == 'INF';
+                    
                     $dataPassenger = Passengers::create([
                         'name' => $passenger['name'],
                         'gender' => $passenger['gender'],
@@ -83,38 +86,49 @@ class BookingController extends Controller
                         'identity_number' => $passenger['identity_number'] ?? null,
                     ]);
                     $ticketOutbound = Tickets::where('flight_id', $data['outbound_flight_id'])->first();
-                    if($ticketOutbound->available_seats <= 0){
+                    if($ticketOutbound->available_seats <= 0 && !$isInfant){
                         return response()->json(['message' => 'Vé này đã hết. Vui lòng chọn vé khác hoặc chuyến bay khác.'], 400);
                     }
+                    // For infants, ticket price is 0
+                    $outboundTicketPrice = $isInfant ? 0 : $passenger['total_price'];
+                    
                     $bookingTicketOutbound = BookingTickets::create([
                         'booking_id' => $booking->id,
                         'ticket_id' => $value['ticket_id'],
-                        'total_price' => $passenger['total_price'],
+                        'total_price' => $outboundTicketPrice,
                         'passenger_id' => $dataPassenger->id,
                         'flight_id' => $data['outbound_flight_id'],
                         'class_id' => $value['class_id'],
                         'type' => 'outbound'
                     ]);
-                    $ticketOutbound->update([
-                        'available_seats' => $ticketOutbound->available_seats - 1
+                    // Only deduct seat if not an infant
+                    if (!$isInfant) {
+                        $ticketOutbound->update([
+                            'available_seats' => $ticketOutbound->available_seats - 1
                         ]);
+                    }
                     if (isset($data['return_flight_id']) && $data['return_flight_id'] != null) {
                         $ticketReturn = Tickets::where('flight_id', $data['return_flight_id'])->first();
-                        if($ticketReturn->available_seats <= 0){
+                        if($ticketReturn->available_seats <= 0 && !$isInfant){
                             return response()->json(['message' => 'Vé khứ hồi cho hạng này đã hết. Vui lòng chuyến bay khác.'], 400);
                         }
+                        $returnTicketPrice = $isInfant ? 0 : $passenger['total_price'];
+                        
                         $bookingTicketReturn = BookingTickets::create([
                             'booking_id' => $booking->id,
-                            'total_price' => $passenger['total_price'],
+                            'total_price' => $returnTicketPrice,
                             'ticket_id' => $ticketReturn->id,
                             'passenger_id' => $dataPassenger->id,
                             'flight_id' => $data['return_flight_id'],
                             'class_id' => $value['class_id'],
                             'type' => 'return'
                         ]);
-                        $ticketReturn->update([
-                        'available_seats' => $ticketReturn->available_seats - 1
-                    ]);
+                        // Only deduct seat if not an infant
+                        if (!$isInfant) {
+                            $ticketReturn->update([
+                                'available_seats' => $ticketReturn->available_seats - 1
+                            ]);
+                        }
                     }
                     $bookingTicketId = $bookingTicketOutbound->id;
 

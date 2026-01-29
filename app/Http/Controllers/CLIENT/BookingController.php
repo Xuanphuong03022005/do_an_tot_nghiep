@@ -76,11 +76,11 @@ class BookingController extends Controller
                     $dataPassenger = Passengers::create([
                         'name' => $passenger['name'],
                         'gender' => $passenger['gender'],
-                        'phone' => $passenger['phone'],
-                        'email' => $passenger['email'],
+                        'phone' => $passenger['phone'] ?? null,
+                        'email' => $passenger['email'] ?? null,
                         'type' => $passenger['type'],
-                        'identity_type' => $passenger['identity_type'],
-                        'identity_number' => $passenger['identity_number'],
+                        'identity_type' => $passenger['identity_type'] ?? null,
+                        'identity_number' => $passenger['identity_number'] ?? null,
                     ]);
                     $ticketOutbound = Tickets::where('flight_id', $data['outbound_flight_id'])->first();
                     if($ticketOutbound->available_seats <= 0){

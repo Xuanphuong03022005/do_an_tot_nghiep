@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class BaggagePackageController extends Controller
 {
-     public function index()
+    public function index()
     {
         $baggagePackages = Baggage_packages::all();
         return response()->json($baggagePackages);

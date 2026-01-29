@@ -420,9 +420,7 @@ const FlightManager = () => {
                 border: "1px solid #cce5ff",
               }}
             >
-              <h5 style={{ marginBottom: "10px", color: "#004085" }}>
-                Cấu hình giá vé đã lưu:
-              </h5>
+              <h5 style={{ marginBottom: "10px", color: "#004085" }}></h5>
               {selectedFlight.tickets && selectedFlight.tickets.length > 0 ? (
                 <ul style={{ listStyle: "none", padding: 0 }}>
                   {selectedFlight.tickets.map((t) => (
@@ -441,8 +439,7 @@ const FlightManager = () => {
                           {t.seat_class?.name || `Hạng ${t.class_id}`}
                         </strong>
                         <div style={{ fontSize: "12px", color: "#666" }}>
-                          Số lượng: {t.total_seats} ghế ({t.row_start} -{" "}
-                          {t.row_end})
+                          Số lượng: {t.total_seats} ghế
                         </div>
                       </div>
                       <div
@@ -450,6 +447,8 @@ const FlightManager = () => {
                           fontWeight: "bold",
                           color: "#28a745",
                           fontSize: "16px",
+                          top: "15px",
+                          position: "relative",
                         }}
                       >
                         {new Intl.NumberFormat("vi-VN").format(t.price)} VNĐ

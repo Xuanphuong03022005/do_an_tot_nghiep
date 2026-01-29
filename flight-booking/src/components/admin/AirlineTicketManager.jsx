@@ -16,6 +16,7 @@ const AirlineTicketManager = () => {
     class_id: "",
     row_start: "1",
     row_end: "1",
+    price: "0", // Thêm trường giá tiền
   });
 
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
@@ -68,10 +69,8 @@ const AirlineTicketManager = () => {
         params: { airline_id: airlineId },
       });
       const flightData = res.data?.data || res.data || [];
-      console.log("Danh sách chuyến bay lấy được:", flightData);
       setFlights(flightData);
     } catch (err) {
-      console.error("Lỗi gọi API flights:", err);
       setFlights([]);
     }
   };
@@ -98,7 +97,6 @@ const AirlineTicketManager = () => {
     if (!selectedAirline || !formData.row_start || !formData.row_end) return 0;
     const start = parseInt(formData.row_start);
     const end = parseInt(formData.row_end);
-    // Sử dụng seat_per_row từ Database
     const perRow = parseInt(selectedAirline.seat_per_row) || 0;
 
     if (end < start) return 0;
@@ -113,12 +111,10 @@ const AirlineTicketManager = () => {
     }
 
     const newSeats = calculateSeatsFromRows();
-    // Tính tổng ghế máy bay từ Database: hàng * ghế mỗi hàng (60 * 9 = 540)
     const airplaneLimit =
       (parseInt(selectedAirline?.seat_rows) || 0) *
       (parseInt(selectedAirline?.seat_per_row) || 0);
 
-    // Tính số ghế đã phân bổ cho DUY NHẤT chuyến bay đang chọn
     const currentAllocated = tickets
       .filter((t) => t.flight_id === Number(selectedFlightId))
       .reduce((sum, t) => sum + parseInt(t.total_seats || 0), 0);
@@ -137,7 +133,7 @@ const AirlineTicketManager = () => {
         flight_id: Number(selectedFlightId),
         class_id: Number(formData.class_id),
         total_seats: Number(newSeats),
-        price: 0,
+        price: Number(formData.price), // Gửi giá tiền
         row_start: Number(formData.row_start),
         row_end: Number(formData.row_end),
       };
@@ -150,12 +146,10 @@ const AirlineTicketManager = () => {
     }
   };
 
-  // Tính giới hạn máy bay (540 ghế)
   const maxSeats =
     (parseInt(selectedAirline?.seat_rows) || 0) *
     (parseInt(selectedAirline?.seat_per_row) || 0);
 
-  // Logic nhóm theo chuyến bay để hiển thị tổng ngay phía dưới nút thiết lập
   const groupedByFlight = tickets.reduce((acc, ticket) => {
     const fNumber = ticket.flight?.flight_number || "N/A";
     if (!acc[fNumber]) {
@@ -179,17 +173,9 @@ const AirlineTicketManager = () => {
         style={{ display: "flex", justifyContent: "space-between" }}
       >
         <h3>Quản lý Hạng vé & Chuyến bay</h3>
-        {/* <button
-          className="btn-primary"
-          style={{ backgroundColor: "#28a745" }}
-          onClick={() => setIsClassModalOpen(true)}
-        >
-          + Thêm Danh Mục Hạng Vé
-        </button> */}
       </div>
 
       <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
-        {/* Cột trái: Chọn máy bay */}
         <div
           style={{
             flex: 1,
@@ -226,7 +212,6 @@ const AirlineTicketManager = () => {
           </div>
         </div>
 
-        {/* Cột phải: Danh sách vé */}
         <div style={{ flex: 2 }}>
           {selectedAirline ? (
             <>
@@ -235,13 +220,13 @@ const AirlineTicketManager = () => {
                 className="btn-primary"
                 onClick={() => {
                   setSelectedFlightId("");
+                  setFormData({ ...formData, price: "0" }); // Reset giá
                   setIsModalOpen(true);
                 }}
               >
                 + Thiết lập vé cho Chuyến bay
               </button>
 
-              {/* Hiển thị tổng vé theo từng chuyến bay ngay dưới nút thiết lập */}
               <div style={{ marginTop: "15px" }}>
                 {Object.keys(groupedByFlight).map((fNum) => (
                   <div
@@ -258,18 +243,6 @@ const AirlineTicketManager = () => {
                     <strong>Chuyến bay {fNum}:</strong>{" "}
                     {groupedByFlight[fNum].total} / {groupedByFlight[fNum].max}{" "}
                     ghế
-                    {groupedByFlight[fNum].total >
-                      groupedByFlight[fNum].max && (
-                      <span
-                        style={{
-                          color: "red",
-                          fontWeight: "bold",
-                          marginLeft: "10px",
-                        }}
-                      >
-                        ⚠️ Vượt tải máy bay!
-                      </span>
-                    )}
                   </div>
                 ))}
               </div>
@@ -283,6 +256,7 @@ const AirlineTicketManager = () => {
                     <th>Chuyến bay</th>
                     <th>Hạng ghế</th>
                     <th>Tổng ghế</th>
+                    <th>Giá vé</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
@@ -292,6 +266,9 @@ const AirlineTicketManager = () => {
                       <td>{t.flight?.flight_number || "N/A"}</td>
                       <td>{t.seat_class?.name || `Hạng ${t.class_id}`}</td>
                       <td>{t.total_seats} ghế</td>
+                      <td>
+                        {new Intl.NumberFormat("vi-VN").format(t.price)} VNĐ
+                      </td>
                       <td>
                         <button
                           className="btn-action btn-delete"
@@ -320,7 +297,6 @@ const AirlineTicketManager = () => {
         </div>
       </div>
 
-      {/* MODAL PHÂN BỔ VÉ */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ width: "450px" }}>
@@ -357,6 +333,18 @@ const AirlineTicketManager = () => {
                     </option>
                   ))}
                 </select>
+
+                {/* THÊM TRƯỜNG NHẬP GIÁ TIỀN */}
+                <label style={{ marginTop: "10px" }}>3. Giá tiền (VNĐ)</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="Nhập giá vé..."
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
+                />
 
                 <div
                   style={{
@@ -459,50 +447,6 @@ const AirlineTicketManager = () => {
                   disabled={isOverLimit || currentPlannedSeats <= 0}
                 >
                   Xác nhận
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL THÊM HẠNG VÉ */}
-      {isClassModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h4>Thêm Danh Mục Hạng Vé</h4>
-            <form onSubmit={handleCreateSeatClass}>
-              <div className="form-group">
-                <label>Tên hạng vé</label>
-                <input
-                  type="text"
-                  required
-                  value={newClassData.name}
-                  onChange={(e) =>
-                    setNewClassData({ ...newClassData, name: e.target.value })
-                  }
-                />
-                <label>Ghi chú</label>
-                <textarea
-                  value={newClassData.description}
-                  onChange={(e) =>
-                    setNewClassData({
-                      ...newClassData,
-                      description: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setIsClassModalOpen(false)}
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn-save">
-                  Lưu lại
                 </button>
               </div>
             </form>

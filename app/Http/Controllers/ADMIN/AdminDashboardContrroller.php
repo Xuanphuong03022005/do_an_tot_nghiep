@@ -47,17 +47,17 @@ class AdminDashboardContrroller extends Controller
     {
         try {
             $data = BookingTickets::select(
-                DB::raw('flights.aircraft_code'),
-                DB::raw('seat_flights.total_seats'),
+                DB::raw('airlines.name as airline_name'),
                 DB::raw('COUNT(booking_tickets.id) as sold_seats'),
-                DB::raw('SUM(booking_tickets.total_price) as revenue')
+                DB::raw('SUM(booking_tickets.total_price) as revenue'),
+                DB::raw('COUNT(DISTINCT flights.id) as total_flights')
             )
             ->leftJoin('tickets', 'booking_tickets.ticket_id', '=', 'tickets.id')
             ->leftJoin('flights', 'tickets.flight_id', '=', 'flights.id')
-            ->leftJoin('seat_flights', 'flights.id', '=', 'seat_flights.flight_id')
+            ->leftJoin('airlines', 'flights.airline_id', '=', 'airlines.id')
             ->whereMonth('booking_tickets.created_at', now()->month)
             ->whereYear('booking_tickets.created_at', now()->year)
-            ->groupBy('flights.aircraft_code', 'seat_flights.total_seats')
+            ->groupBy('flights.airline_id', 'airlines.name')
             ->orderBy('revenue', 'desc')
             ->get();
 

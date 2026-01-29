@@ -5,17 +5,17 @@ import "./admin.css";
 const AirlineTicketManager = () => {
   const [airlines, setAirlines] = useState([]);
   const [selectedAirline, setSelectedAirline] = useState(null);
+  const [flights, setFlights] = useState([]);
+  const [selectedFlightId, setSelectedFlightId] = useState("");
   const [tickets, setTickets] = useState([]);
   const [ticketClasses, setTicketClasses] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTicketId, setEditingTicketId] = useState(null);
-
   const [formData, setFormData] = useState({
     class_id: "",
-    row_start: "",
-    row_end: "",
+    row_start: "1",
+    row_end: "1",
   });
 
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
@@ -40,6 +40,19 @@ const AirlineTicketManager = () => {
     }
   };
 
+  const handleCreateSeatClass = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${BASE_URL}/seat-classes`, newClassData);
+      alert("Thêm danh mục hạng vé thành công!");
+      setIsClassModalOpen(false);
+      setNewClassData({ name: "", description: "" });
+      fetchSeatClasses();
+    } catch (err) {
+      alert("Thêm hạng vé thất bại");
+    }
+  };
+
   const fetchAirlines = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/airline`);
@@ -49,20 +62,17 @@ const AirlineTicketManager = () => {
     }
   };
 
-  // --- HÀM XỬ LÝ THÊM HẠNG VÉ (ĐÃ THÊM LẠI ĐỂ SỬA LỖI) ---
-
-  const handleCreateSeatClass = async (e) => {
-    e.preventDefault();
+  const fetchFlightsByAirline = async (airlineId) => {
     try {
-      await axios.post(`${BASE_URL}/seat-classes`, newClassData);
-
-      alert("Thêm danh mục hạng vé thành công!");
-
-      setIsClassModalOpen(false);
-      setNewClassData({ name: "", description: "" });
-      fetchSeatClasses();
+      const res = await axios.get(`${BASE_URL}/flights`, {
+        params: { airline_id: airlineId },
+      });
+      const flightData = res.data?.data || res.data || [];
+      console.log("Danh sách chuyến bay lấy được:", flightData);
+      setFlights(flightData);
     } catch (err) {
-      alert("Thêm hạng vé thất bại");
+      console.error("Lỗi gọi API flights:", err);
+      setFlights([]);
     }
   };
 
@@ -70,16 +80,15 @@ const AirlineTicketManager = () => {
     if (!airline || !airline.id) return;
     setSelectedAirline(airline);
     setLoading(true);
+
     try {
+      await fetchFlightsByAirline(airline.id);
       const res = await axios.get(`${BASE_URL}/tickets`, {
         params: { airline_id: airline.id },
       });
-      // Kiểm tra kỹ cấu trúc res.data.data từ Laravel Paginate
-      const ticketData = res.data?.data?.data || res.data?.data || [];
-      setTickets(Array.isArray(ticketData) ? ticketData : []);
+      setTickets(res.data?.data || res.data || []);
     } catch (err) {
-      console.error("Lỗi tải vé:", err);
-      setTickets([]); // Trả về mảng rỗng để không lỗi .reduce()
+      setTickets([]);
     } finally {
       setLoading(false);
     }
@@ -89,58 +98,79 @@ const AirlineTicketManager = () => {
     if (!selectedAirline || !formData.row_start || !formData.row_end) return 0;
     const start = parseInt(formData.row_start);
     const end = parseInt(formData.row_end);
-    const perRow = parseInt(selectedAirline.seat_per_row);
+    // Sử dụng seat_per_row từ Database
+    const perRow = parseInt(selectedAirline.seat_per_row) || 0;
+
     if (end < start) return 0;
     return (end - start + 1) * perRow;
   };
 
-  const calculateRemainingSeats = () => {
-    if (!selectedAirline) return 0;
-    const totalCapacity =
-      Number(selectedAirline.seat_rows) * Number(selectedAirline.seat_per_row);
-    const allocatedSeats = tickets.reduce((sum, t) => {
-      if (editingTicketId && Number(t.id) === Number(editingTicketId))
-        return sum;
-      return sum + Number(t.total_seats || 0);
-    }, 0);
-
-    return totalCapacity - allocatedSeats;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!selectedFlightId) {
+      alert("Vui lòng chọn một chuyến bay cụ thể!");
+      return;
+    }
 
-    // Kiểm tra số ghế trước khi gửi (Vấn đề 4)
-    const totalSeats = calculateSeatsFromRows();
-    const remaining = calculateRemainingSeats();
-    if (totalSeats > remaining) {
+    const newSeats = calculateSeatsFromRows();
+    // Tính tổng ghế máy bay từ Database: hàng * ghế mỗi hàng (60 * 9 = 540)
+    const airplaneLimit =
+      (parseInt(selectedAirline?.seat_rows) || 0) *
+      (parseInt(selectedAirline?.seat_per_row) || 0);
+
+    // Tính số ghế đã phân bổ cho DUY NHẤT chuyến bay đang chọn
+    const currentAllocated = tickets
+      .filter((t) => t.flight_id === Number(selectedFlightId))
+      .reduce((sum, t) => sum + parseInt(t.total_seats || 0), 0);
+
+    if (currentAllocated + newSeats > airplaneLimit) {
       alert(
-        `Lỗi: Số ghế phân bổ (${totalSeats}) vượt quá số ghế còn trống (${remaining})`
+        `Lỗi: Không thể phân bổ! Tổng ghế (${
+          currentAllocated + newSeats
+        }) vượt quá giới hạn máy bay (${airplaneLimit}).`
       );
-
       return;
     }
 
     try {
       const payload = {
-        airline_id: Number(selectedAirline.id),
+        flight_id: Number(selectedFlightId),
         class_id: Number(formData.class_id),
-        total_seats: Number(totalSeats),
+        total_seats: Number(newSeats),
+        price: 0,
         row_start: Number(formData.row_start),
         row_end: Number(formData.row_end),
-        price: 0,
       };
-
-      // Gửi POST đến /api/admin/tickets
       const res = await axios.post(`${BASE_URL}/tickets`, payload);
       alert(res.data.message);
       setIsModalOpen(false);
       handleSelectAirline(selectedAirline);
     } catch (err) {
-      // Lỗi 405 sẽ biến mất sau khi thêm Route POST ở Backend
       alert(err.response?.data?.message || "Lỗi hệ thống");
     }
   };
+
+  // Tính giới hạn máy bay (540 ghế)
+  const maxSeats =
+    (parseInt(selectedAirline?.seat_rows) || 0) *
+    (parseInt(selectedAirline?.seat_per_row) || 0);
+
+  // Logic nhóm theo chuyến bay để hiển thị tổng ngay phía dưới nút thiết lập
+  const groupedByFlight = tickets.reduce((acc, ticket) => {
+    const fNumber = ticket.flight?.flight_number || "N/A";
+    if (!acc[fNumber]) {
+      acc[fNumber] = { total: 0, max: maxSeats };
+    }
+    acc[fNumber].total += parseInt(ticket.total_seats || 0);
+    return acc;
+  }, {});
+
+  const currentPlannedSeats = calculateSeatsFromRows();
+  const seatsAlreadyAllocatedInModal = tickets
+    .filter((t) => t.flight_id === Number(selectedFlightId))
+    .reduce((sum, t) => sum + parseInt(t.total_seats || 0), 0);
+  const isOverLimit =
+    seatsAlreadyAllocatedInModal + currentPlannedSeats > maxSeats;
 
   return (
     <div className="manager-section">
@@ -148,18 +178,18 @@ const AirlineTicketManager = () => {
         className="header-flex"
         style={{ display: "flex", justifyContent: "space-between" }}
       >
-        <h3>Quản lý Phân bổ Ghế theo Hàng</h3>
-
-        <button
+        <h3>Quản lý Hạng vé & Chuyến bay</h3>
+        {/* <button
           className="btn-primary"
           style={{ backgroundColor: "#28a745" }}
           onClick={() => setIsClassModalOpen(true)}
         >
           + Thêm Danh Mục Hạng Vé
-        </button>
+        </button> */}
       </div>
 
       <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+        {/* Cột trái: Chọn máy bay */}
         <div
           style={{
             flex: 1,
@@ -189,45 +219,59 @@ const AirlineTicketManager = () => {
                 <strong>{al.name}</strong> - {al.code}
                 <br />
                 <small>
-                  Hàng ghế: {al.seat_rows} | Ghế/hàng: {al.seat_per_row}
+                  Ghế/hàng: {al.seat_per_row} | Hàng: {al.seat_rows}
                 </small>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Nội dung phân bổ bên phải */}
+        {/* Cột phải: Danh sách vé */}
         <div style={{ flex: 2 }}>
           {selectedAirline ? (
             <>
-              <h4>Cấu hình: {selectedAirline.name}</h4>
-
+              <h4>Vé đã thiết lập cho: {selectedAirline.name}</h4>
               <button
                 className="btn-primary"
                 onClick={() => {
-                  setEditingTicketId(null);
-
-                  setFormData({
-                    class_id: "",
-                    row_start: "",
-                    row_end: "",
-                  });
+                  setSelectedFlightId("");
                   setIsModalOpen(true);
                 }}
               >
-                + Thiết lập khoảng hàng ghế
+                + Thiết lập vé cho Chuyến bay
               </button>
 
-              <div
-                style={{
-                  background: "#f8f9fa",
-                  padding: "10px",
-                  marginTop: "10px",
-                  border: "1px solid #dee2e6",
-                }}
-              >
-                Số ghế còn trống: <strong>{calculateRemainingSeats()}</strong> /{" "}
-                {selectedAirline.seat_rows * selectedAirline.seat_per_row}
+              {/* Hiển thị tổng vé theo từng chuyến bay ngay dưới nút thiết lập */}
+              <div style={{ marginTop: "15px" }}>
+                {Object.keys(groupedByFlight).map((fNum) => (
+                  <div
+                    key={fNum}
+                    style={{
+                      padding: "10px",
+                      background: "#f0f7ff",
+                      borderRadius: "5px",
+                      borderLeft: "5px solid #007bff",
+                      marginBottom: "8px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <strong>Chuyến bay {fNum}:</strong>{" "}
+                    {groupedByFlight[fNum].total} / {groupedByFlight[fNum].max}{" "}
+                    ghế
+                    {groupedByFlight[fNum].total >
+                      groupedByFlight[fNum].max && (
+                      <span
+                        style={{
+                          color: "red",
+                          fontWeight: "bold",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        ⚠️ Vượt tải máy bay!
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <table
@@ -236,27 +280,23 @@ const AirlineTicketManager = () => {
               >
                 <thead>
                   <tr>
+                    <th>Chuyến bay</th>
                     <th>Hạng ghế</th>
-                    <th>Từ hàng</th>
-                    <th>Đến hàng</th>
                     <th>Tổng ghế</th>
-
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tickets.map((t) => (
                     <tr key={t.id}>
-                      {/* Hiển thị t.seat_class.name thay vì class_id */}
+                      <td>{t.flight?.flight_number || "N/A"}</td>
                       <td>{t.seat_class?.name || `Hạng ${t.class_id}`}</td>
-                      <td>{t.row_start}</td>
-                      <td>{t.row_end}</td>
                       <td>{t.total_seats} ghế</td>
                       <td>
                         <button
                           className="btn-action btn-delete"
                           onClick={async () => {
-                            if (window.confirm("Xóa phân bổ này?")) {
+                            if (window.confirm("Xóa hạng vé này?")) {
                               await axios.delete(`${BASE_URL}/tickets/${t.id}`);
                               handleSelectAirline(selectedAirline);
                             }
@@ -272,57 +312,50 @@ const AirlineTicketManager = () => {
             </>
           ) : (
             <div
-              style={{
-                textAlign: "center",
-                padding: "50px",
-                color: "#888",
-              }}
+              style={{ textAlign: "center", padding: "50px", color: "#888" }}
             >
-              Hãy chọn một máy bay để bắt đầu cấu hình.
+              Hãy chọn máy bay.
             </div>
           )}
         </div>
       </div>
 
-      {/* MODAL PHÂN BỔ KHOẢNG HÀNG */}
+      {/* MODAL PHÂN BỔ VÉ */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ width: "450px" }}>
-            <h4
-              style={{
-                borderBottom: "1px solid #eee",
-                paddingBottom: "10px",
-              }}
-            >
-              Phân bổ hạng ghế theo vị trí
-            </h4>
+            <h4>Phân bổ vé cho Chuyến bay</h4>
             <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ marginBottom: "15px" }}>
-                <label>Chọn hạng vé</label>
+                <label>1. Chọn Chuyến bay (Bắt buộc)</label>
+                <select
+                  required
+                  value={selectedFlightId}
+                  onChange={(e) => setSelectedFlightId(e.target.value)}
+                >
+                  <option value="">-- Chọn chuyến bay --</option>
+                  {flights.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.flight_number} |{" "}
+                      {new Date(f.departure_time).toLocaleString("vi-VN")}
+                    </option>
+                  ))}
+                </select>
 
+                <label style={{ marginTop: "10px" }}>2. Chọn hạng vé</label>
                 <select
                   required
                   value={formData.class_id}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      class_id: e.target.value,
-                    })
+                    setFormData({ ...formData, class_id: e.target.value })
                   }
                 >
                   <option value="">-- Chọn hạng --</option>
-                  {ticketClasses
-                    .filter(
-                      (c) =>
-                        !tickets.some(
-                          (t) => Number(t.class_id) === Number(c.id)
-                        )
-                    ) // Lọc bỏ hạng đã có trong danh sách tickets hiện tại
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
+                  {ticketClasses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
 
                 <div
@@ -338,14 +371,10 @@ const AirlineTicketManager = () => {
                     <input
                       type="number"
                       min="1"
-                      max={selectedAirline.seat_rows}
                       required
                       value={formData.row_start}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          row_start: e.target.value,
-                        })
+                        setFormData({ ...formData, row_start: e.target.value })
                       }
                     />
                   </div>
@@ -353,15 +382,11 @@ const AirlineTicketManager = () => {
                     <label>Hàng kết thúc</label>
                     <input
                       type="number"
-                      min={formData.row_start || 1}
-                      max={selectedAirline.seat_rows}
+                      min={formData.row_start}
                       required
                       value={formData.row_end}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          row_end: e.target.value,
-                        })
+                        setFormData({ ...formData, row_end: e.target.value })
                       }
                     />
                   </div>
@@ -372,23 +397,43 @@ const AirlineTicketManager = () => {
                     marginTop: "20px",
                     padding: "15px",
                     background: "#e7f3ff",
-                    borderRadius: "5px",
                     textAlign: "center",
-                    border: "1px solid #b3d7ff",
+                    borderRadius: "8px",
                   }}
                 >
-                  <span style={{ fontSize: "14px" }}>
-                    Tổng số ghế được tạo:
-                  </span>{" "}
-                  <br />
-                  <strong
-                    style={{
-                      fontSize: "24px",
-                      color: "#0056b3",
-                    }}
-                  >
-                    {calculateSeatsFromRows()}
-                  </strong>
+                  <div style={{ fontSize: "13px" }}>
+                    Giới hạn máy bay: <strong>{maxSeats} ghế</strong>
+                  </div>
+                  <div style={{ fontSize: "13px" }}>
+                    Đã phân bổ cho chuyến này:{" "}
+                    <strong>{seatsAlreadyAllocatedInModal} ghế</strong>
+                  </div>
+                  <hr
+                    style={{ border: "0.5px solid #ccc", margin: "10px 0" }}
+                  />
+                  <div>
+                    Số ghế dự kiến thêm:{" "}
+                    <strong
+                      style={{
+                        fontSize: "24px",
+                        color: isOverLimit ? "#e74c3c" : "#0056b3",
+                      }}
+                    >
+                      {currentPlannedSeats}
+                    </strong>
+                  </div>
+                  {isOverLimit && (
+                    <div
+                      style={{
+                        color: "#e74c3c",
+                        fontSize: "12px",
+                        marginTop: "5px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ⚠️ Vượt quá tải của máy bay!
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -410,7 +455,8 @@ const AirlineTicketManager = () => {
                 <button
                   type="submit"
                   className="btn-save"
-                  style={{ backgroundColor: "#007bff" }}
+                  style={{ backgroundColor: isOverLimit ? "#ccc" : "#007bff" }}
+                  disabled={isOverLimit || currentPlannedSeats <= 0}
                 >
                   Xác nhận
                 </button>
@@ -421,7 +467,6 @@ const AirlineTicketManager = () => {
       )}
 
       {/* MODAL THÊM HẠNG VÉ */}
-
       {isClassModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -434,15 +479,10 @@ const AirlineTicketManager = () => {
                   required
                   value={newClassData.name}
                   onChange={(e) =>
-                    setNewClassData({
-                      ...newClassData,
-                      name: e.target.value,
-                    })
+                    setNewClassData({ ...newClassData, name: e.target.value })
                   }
                 />
-
                 <label>Ghi chú</label>
-
                 <textarea
                   value={newClassData.description}
                   onChange={(e) =>
@@ -461,7 +501,6 @@ const AirlineTicketManager = () => {
                 >
                   Hủy
                 </button>
-
                 <button type="submit" className="btn-save">
                   Lưu lại
                 </button>

@@ -18,10 +18,14 @@ protected $fillable = [
     'row_start', 
     'row_end'
 ];
-public function seat_class() {
-    return $this->belongsTo(SeatClasses::class, 'class_id');
+
+
+public function flight()
+{
+    return $this->belongsTo(Flights::class, 'flight_id');
 }
-public function flight() {
-    return $this->belongsTo(Flight::class, 'flight_id');
+
+public function seat_class() {
+    return $this->belongsTo(SeatClasses::class, 'class_id'); // Thay SeatClass bằng tên Model hạng ghế của bạn
 }
 }

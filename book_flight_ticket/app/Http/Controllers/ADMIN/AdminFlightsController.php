@@ -17,20 +17,25 @@ use Illuminate\Support\Facades\Log;
 
 class AdminFlightsController extends Controller
 {
-    public function index()
-    {
-        try {
-            $flights = Flights::with(['airline:id,name', 'departureAirport:id,name', 'arrivalAirport:id,name'])
-                ->orderBy('departure_time', 'asc')
-                ->get();
-            return response()->json([
-                'data' => $flights,
-                'message' => 'Lấy danh sách chuyến bay thành công.'
-            ], 200);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'Lấy danh sách thất bại.'], 500);
+ public function index(Request $request) {
+    try {
+        // Sử dụng query builder cơ bản để tránh bị ảnh hưởng bởi các Scope lạ
+        $query = Flights::with(['airline', 'departureAirport', 'arrivalAirport']);
+
+        if ($request->has('airline_id') && $request->airline_id != "") {
+            $query->where('airline_id', $request->airline_id);
         }
+
+        $flights = $query->orderBy('id', 'desc')->get(); // Sắp xếp cái mới nhất lên đầu
+
+        return response()->json([
+            'data' => $flights,
+            'message' => 'Lấy danh sách thành công'
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
     }
+}
 
     public function show($id)
     {
@@ -49,76 +54,40 @@ class AdminFlightsController extends Controller
         }
     }
 
-   public function store(CreateFlightRequest $request)
+  public function store(CreateFlightRequest $request)
 {
     $data = $request->all();
-    $outbound = $data['outbound_flight'];
-    
-    // 1. Kiểm tra trùng sân bay
+    $outbound = $data['outbound_flight'] ?? null;
+
+    // 1. Kiểm tra sân bay đi và đến không được trùng nhau
     if ($data['departure_airport_id'] == $data['arrival_airport_id']) {
         return response()->json(['message' => 'Sân bay đến không thể trùng với sân bay đi.'], 422);
     }
 
-    // 2. Lấy cấu hình máy bay mẫu (những dòng flight_id là NULL)
-    $airlineConfigs = Tickets::where('airline_id', $data['airline_id'])->whereNull('flight_id')->get();
-    if ($airlineConfigs->isEmpty()) {
-        return response()->json(['message' => 'Máy bay chưa được cấu hình hạng ghế!'], 422);
-    }
-
     DB::beginTransaction();
     try {
-        $depAirport = Airports::find($data['departure_airport_id']);
-        $arrAirport = Airports::find($data['arrival_airport_id']);
-
-        // 3. Tạo Chuyến bay
+        // 2. Chỉ tạo duy nhất bản ghi chuyến bay
         $flight = Flights::create([
-            'airline_id' => $data['airline_id'],
+            'airline_id'           => $data['airline_id'],
             'departure_airport_id' => $data['departure_airport_id'],
-            'arrival_airport_id' => $data['arrival_airport_id'],
-            'free_baggage_kg' => $data['free_baggage_kg'] ?? 20,
-            'departure_time' => $outbound['departure_time'],
-            'arrival_time' => $outbound['arrival_time'],
-            'flight_number' => $depAirport->code . '-' . $arrAirport->code . '-' . now()->timestamp,
+            'arrival_airport_id'   => $data['arrival_airport_id'],
+            'departure_time'       => $outbound['departure_time'] ?? null,
+            'arrival_time'         => $outbound['arrival_time'] ?? null,
+            'flight_number'        => $data['flight_number'],
+            'free_baggage_kg'      => $data['free_baggage_kg'] ?? 20,
         ]);
 
-        // 4. Tạo SeatFlights (Ghế vật lý cho chuyến bay)
-        $seats = Seats::where('airline_id', $data['airline_id'])->where('status', 'usable')->get();
-        $seatByFlights = [];
-        foreach ($seats as $s) {
-            $price = $this->PriceSeatBySeatclasses($s->seat_class_id, $outbound['seat_classes']);
-            if ($price > 0) {
-                $seatByFlights[] = [
-                    'flight_id' => $flight->id,
-                    'seat_number' => $s->seat_number,
-                    'seat_id' => $s->id,
-                    'price' => $price,
-                    'created_at' => now(), 'updated_at' => now()
-                ];
-            }
-        }
-        SeatFlights::insert($seatByFlights);
-
-        
-        // Kế thừa dải hàng (row_start, row_end) từ cấu hình máy bay
-        foreach ($airlineConfigs as $config) {
-            $price = $this->PriceSeatBySeatclasses($config->class_id, $outbound['seat_classes']);
-            Tickets::create([
-                'flight_id' => $flight->id,
-                'airline_id' => $data['airline_id'],
-                'class_id' => $config->class_id,
-                'price' => $price,
-                'total_seats' => $config->total_seats,
-                'available_seats' => $config->total_seats,
-                'row_start' => $config->row_start,
-                'row_end' => $config->row_end,
-            ]);
-        }
-
         DB::commit();
-        return response()->json(['message' => 'Thêm chuyến bay thành công.'], 200);
+        return response()->json([
+            'message' => 'Tạo chuyến bay thành công!',
+            'data'    => $flight
+        ], 200);
+
     } catch (Exception $e) {
         DB::rollBack();
-        return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
+        return response()->json([
+            'message' => 'Lỗi khi lưu chuyến bay: ' . $e->getMessage()
+        ], 500);
     }
 }
 

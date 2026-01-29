@@ -6,7 +6,7 @@ const BASE_URL = "http://127.0.0.1:8000/api";
 const API_ENDPOINTS = {
   AIRLINES: `${BASE_URL}/admin/airline`,
   FLIGHTS: `${BASE_URL}/admin/flights`,
-  FLIGHT_DETAIL: `${BASE_URL}/admin/flight`, // Dùng cho cả POST, DELETE, GET theo ID
+  FLIGHT_DETAIL: `${BASE_URL}/admin/flight`,
   AIRPORTS: `${BASE_URL}/admin/airports`,
   TICKETS: `${BASE_URL}/admin/tickets`,
 };
@@ -110,36 +110,25 @@ const FlightManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      selectedAirlineTickets.some((t) => !t.inputPrice || t.inputPrice <= 0)
-    ) {
-      alert("Vui lòng nhập giá vé hợp lệ!");
-      return;
-    }
-
     const payload = {
       airline_id: Number(formData.airline_id),
       departure_airport_id: Number(formData.departure_airport_id),
       arrival_airport_id: Number(formData.arrival_airport_id),
-      free_baggage_kg: 20,
+      flight_number: formData.flight_number,
+
       outbound_flight: {
         departure_time: `${formData.departure_date} ${formData.dep_time}:00`,
         arrival_time: `${formData.departure_date} ${formData.arr_time}:00`,
-        seat_classes: selectedAirlineTickets.map((t) => ({
-          id: t.class_id,
-          price: parseFloat(t.inputPrice),
-        })),
       },
     };
 
     try {
-      // Dùng chung endpoint FLIGHT_DETAIL nhưng với phương thức POST
       await axios.post(API_ENDPOINTS.FLIGHT_DETAIL, payload);
-      alert("Thêm thành công!");
+      alert("Tạo chuyến bay thành công!");
       setIsModalOpen(false);
       fetchInitialData();
     } catch (error) {
-      alert("Thất bại: " + (error.response?.data?.message || "Lỗi validation"));
+      alert("Lỗi: " + (error.response?.data?.message || "Hệ thống"));
     }
   };
 
@@ -308,73 +297,19 @@ const FlightManager = () => {
                 </div>
               </div>
 
-              <div
-                className="seat-info-section"
-                style={{
-                  marginTop: "20px",
-                  padding: "15px",
-                  background: "#f9f9f9",
-                  borderRadius: "5px",
-                }}
-              >
-                <h5>Phân bổ giá vé cho chuyến bay này:</h5>
-                {selectedAirlineTickets.length > 0 ? (
-                  <ul style={{ listStyle: "none", padding: 0 }}>
-                    {selectedAirlineTickets.map((ticket) => (
-                      <li
-                        key={ticket.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginBottom: "10px",
-                          borderBottom: "1px solid #eee",
-                          paddingBottom: "8px",
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
-                          <strong>
-                            {ticket.seat_class?.name ||
-                              `Hạng ${ticket.class_id}`}
-                          </strong>
-                          <div style={{ fontSize: "12px", color: "#666" }}>
-                            {/* HIỂN THỊ THÊM HÀNG GHẾ TẠI ĐÂY */}
-                            Số lượng: {ticket.total_seats} ghế (
-                            {ticket.row_start} - {ticket.row_end})
-                          </div>
-                        </div>
-                        <div style={{ flex: 1, textAlign: "right" }}>
-                          <input
-                            type="number"
-                            placeholder="Nhập giá vé (VNĐ)"
-                            required
-                            style={{
-                              width: "150px",
-                              padding: "5px",
-                              border: "1px solid #ccc",
-                              borderRadius: "4px",
-                            }}
-                            value={ticket.inputPrice}
-                            onChange={(e) =>
-                              handlePriceChange(ticket.id, e.target.value)
-                            }
-                          />
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={{ color: "red", fontSize: "13px" }}>
-                    Vui lòng chọn máy bay để cấu hình giá vé.
-                  </p>
-                )}
-              </div>
-
               <div className="modal-actions" style={{ marginTop: "20px" }}>
                 <button
                   type="submit"
                   className="btn-save"
-                  disabled={selectedAirlineTickets.length === 0}
+                  // Nút chỉ bị khóa nếu thiếu 1 trong 3 thông tin cơ bản này
+                  disabled={
+                    !formData.airline_id ||
+                    !formData.departure_airport_id ||
+                    !formData.arrival_airport_id ||
+                    !formData.departure_date ||
+                    !formData.dep_time ||
+                    !formData.arr_time
+                  }
                 >
                   Lưu chuyến bay
                 </button>

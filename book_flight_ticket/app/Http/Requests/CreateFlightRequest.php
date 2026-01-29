@@ -19,65 +19,35 @@ class CreateFlightRequest extends FormRequest
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
-    {
-        return [
-            // Only one-way flights supported by controller
-            'airline_id' => 'required|exists:airlines,id',
-            'departure_airport_id' => 'required|exists:airports,id',
-            'arrival_airport_id'  => 'required|exists:airports,id|different:departure_airport_id',
+{
+    return [
+        'airline_id' => 'required|exists:airlines,id',
+        'departure_airport_id' => 'required|exists:airports,id',
+        'arrival_airport_id'  => 'required|exists:airports,id|different:departure_airport_id',
 
-            // Outbound flight: required and must contain nested fields
-            'outbound_flight' => 'required|array',
-            'outbound_flight.departure_time' => 'required|date|after:now',
-            'outbound_flight.arrival_time' => [
-                'required',
-                'date',
-                function ($attribute, $value, $fail) {
-                    $departureRaw = $this->input('outbound_flight.departure_time');
-                    if (!$departureRaw) {
-                        $fail('Thiếu thời gian khởi hành cho chuyến đi.');
-                        return;
-                    }
+        // Cho phép gửi lên mà không bắt buộc có outbound_flight ngay
+        'outbound_flight' => 'sometimes|array', 
+        'outbound_flight.departure_time' => 'required|date|after:now',
+        'outbound_flight.arrival_time' => 'required|date',
 
-                    $departure = Carbon::parse($departureRaw);
-                    $arrival   = Carbon::parse($value);
-
-                    if ($arrival->lte($departure)) {
-                        $fail('Thời gian đến phải lớn hơn thời gian khởi hành.');
-                        return;
-                    }
-
-                    if ($arrival->lt($departure->copy()->addMinutes(30))) {
-                        $fail('Thời gian bay tối thiểu là 30 phút.');
-                    }
-
-                    if ($arrival->gt($departure->copy()->addHours(24))) {
-                        $fail('Thời gian bay không được vượt quá 24 giờ.');
-                    }
-
-                    if ($departure->gt(now()->addYear())) {
-                        $fail('Chỉ được tạo chuyến bay trong vòng 1 năm tới.');
-                    }
-                }
-            ],
-
-            'outbound_flight.seat_classes' => [
-                'required',
-                'array',
-                'min:1',
-                function ($attribute, $value, $fail) {
+        // QUAN TRỌNG: Đổi 'required' thành 'nullable'
+        'outbound_flight.seat_classes' => [
+            'nullable', 
+            'array',
+            function ($attribute, $value, $fail) {
+                if ($value) { // Chỉ kiểm tra trùng lặp nếu mảng có dữ liệu
                     $ids = collect($value)->pluck('id');
                     if ($ids->count() !== $ids->unique()->count()) {
                         $fail('Các hạng ghế không được trùng nhau.');
                     }
                 }
-            ],
-
-            'outbound_flight.seat_classes.*.id' => 'required|exists:seat_classes,id',
-            'outbound_flight.seat_classes.*.price' => 'required|numeric|min:1',
-
-        ];
-    }
+            }
+        ],
+        // Dùng required_with: chỉ bắt buộc các trường này nếu mảng seat_classes có dữ liệu
+        'outbound_flight.seat_classes.*.id' => 'required_with:outbound_flight.seat_classes|exists:seat_classes,id',
+        'outbound_flight.seat_classes.*.price' => 'required_with:outbound_flight.seat_classes|numeric|min:1',
+    ];
+}
 
     /**
      * Custom validation messages

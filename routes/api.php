@@ -18,6 +18,7 @@ use App\Http\Controllers\Client\BaggagePackageController;
 use App\Http\Controllers\Client\BaggeRuleController;
 use App\Http\Controllers\CLIENT\BookingController;
 use App\Http\Controllers\Client\ClassesController;
+use App\Http\Controllers\Client\DiscountController;
 use App\Http\Controllers\CLIENT\PaymentController;
 use App\Http\Controllers\CLIENT\TicketController;
 use App\Http\Controllers\CLIENT\UserController;
@@ -101,4 +102,7 @@ Route::get('/seat-classes', [ClassesController::class, 'index']);
 Route::get('/baggage-rules', [BaggeRuleController::class, 'index']);
 //baggage_packages chính là dùng để quy định giá tiền bán thêm cho hành lý ký gửi vượt mức quy định
 Route::get('/baggage-packages', [BaggagePackageController::class, 'index']);
+//discount
+Route::get('/discounts', [DiscountController::class, 'index']);
+
 

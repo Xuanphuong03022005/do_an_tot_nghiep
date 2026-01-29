@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\DestroyBookingExpiredJob;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class DestroyBookingExpired extends Command
 {
@@ -12,7 +13,7 @@ class DestroyBookingExpired extends Command
      *
      * @var string
      */
-    protected $signature = 'command:destroy-booking-expired';
+    protected $signature = 'command:expired';
 
     /**
      * The console command description.
@@ -26,6 +27,7 @@ class DestroyBookingExpired extends Command
      */
     public function handle()
     {
-        DestroyBookingExpiredJob::dispatch();
+        Log::info('TEST Command IS RUNNING');
+      DestroyBookingExpiredJob::dispatch();
     }
 }

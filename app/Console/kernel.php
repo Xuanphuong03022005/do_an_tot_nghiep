@@ -13,16 +13,7 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
-    {
-        // Chạy command:test mỗi phút một lần
-        $schedule->command('command:test')->everyMinute();
-        
-        // Queue worker - chạy liên tục
-        // $schedule->command('queue:work --stop-when-empty')->everyMinute();
-    }
-
-
+    // app/Console/Kernel.php ❌
     /**
      * Register the commands for the application.
      *

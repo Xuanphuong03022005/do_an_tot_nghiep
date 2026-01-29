@@ -7,16 +7,16 @@ import Login from "./components/login/Login";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import UserLayout from "./components/layout/UserLayout";
 
+
 // --- Component bảo vệ Route ---
 const AdminRoute = ({ children }) => {
   const savedUser = localStorage.getItem("user");
   const user = savedUser ? JSON.parse(savedUser) : null;
-
-  // Sử dụng parseInt để ép kiểu về số trước khi so sánh
-  if (!user || parseInt(user.role) !== 1) {
-    alert("Bạn không có quyền Admin!");
+  if (!user || parseInt(user.role) !== 0) {
+    alert("Bạn không có quyền truy cập vào khu vực Quản trị!");
     return <Navigate to="/" replace />;
   }
+
   return children;
 };
 

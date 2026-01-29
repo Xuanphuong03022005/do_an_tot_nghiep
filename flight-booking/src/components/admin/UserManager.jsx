@@ -20,7 +20,7 @@ function UserManager() {
     password: "",
     phone: "",
     address: "",
-    role: 0,
+    role: 1,
   });
 
   const fetchUsers = async (email = "") => {
@@ -55,7 +55,11 @@ function UserManager() {
   // Mở modal sửa
   const handleEditClick = (user) => {
     setSelectedUser(user);
-    setFormData({ ...user, password: "" }); // Reset password field để trống
+    setFormData({
+      ...user,
+      password: "",
+      role: Number(user.role), // Ép kiểu số ở đây
+    });
     setShowEditModal(true);
   };
 
@@ -90,7 +94,7 @@ function UserManager() {
         email: formData.email,
         password: formData.password,
         phone: formData.phone || "0000000000", // Laravel có thể yêu cầu phone
-        role: 1, // Ép quyền Quản trị viên
+        role: 0, // Ép quyền Quản trị viên
       };
 
       await authApi.createUser(newAdmin);
@@ -157,10 +161,16 @@ function UserManager() {
               </td>
               <td>{user.email}</td>
               <td>
-                {user.role === 1 ? (
-                  <span className="badge-admin">Admin</span>
+                {/* Sử dụng == để so sánh không phân biệt kiểu string/number hoặc ép kiểu Number() */}
+                {Number(user.role) === 0 ? (
+                  <span
+                    className="badge-admin"
+                    style={{ color: "red", fontWeight: "bold" }}
+                  >
+                    Admin
+                  </span>
                 ) : (
-                  "quản trị"
+                  <span className="badge-user">Người dùng</span>
                 )}
               </td>
               <td style={{ textAlign: "center" }}>
@@ -261,12 +271,13 @@ function UserManager() {
               <label>Vai trò:</label>
               <select
                 value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
+                onChange={
+                  (e) =>
+                    setFormData({ ...formData, role: Number(e.target.value) }) // Ép kiểu Number
                 }
               >
-                <option value={0}>Khách hàng</option>
-                <option value={1}>Quản trị viên</option>
+                <option value={0}>Quản trị viên (Admin)</option>
+                <option value={1}>Khách hàng (User)</option>
               </select>
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowEditModal(false)}>

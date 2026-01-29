@@ -34,15 +34,18 @@ const Login = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await onLogin(email, password); // Cần await ở đây
-
+    const success = await onLogin(email, password);
     if (success) {
-      navigate("adm"); // Chuyển trang chủ khi thành công
+      const savedUser = JSON.parse(localStorage.getItem("user"));
+      if (savedUser && parseInt(savedUser.role) === 0) {
+        navigate("/adm");
+      } else {
+        navigate("/");
+      }
     } else {
       alert("Email hoặc Mật Khẩu không chính xác.");
     }
   };
-
   return (
     <div className="form-container login-form">
       <div className="login-box">

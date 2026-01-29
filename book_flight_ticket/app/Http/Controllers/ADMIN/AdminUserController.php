@@ -118,7 +118,7 @@ public function store(StoreUserRequest $request)
         $user->phone = $validated['phone'] ?? null;
         $user->address = $validated['address'] ?? null;
         $user->password = Hash::make($validated['password']);
-        $user->role = 1; // Mặc định là Admin khi tạo từ trang quản trị
+        $user->role = 0; 
         $user->save();
 
         DB::commit();

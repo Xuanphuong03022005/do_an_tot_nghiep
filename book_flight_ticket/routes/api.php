@@ -6,6 +6,8 @@ use App\Http\Controllers\ADMIN\AdminAirpotsController;
 use App\Http\Controllers\ADMIN\AdminBaggagePackageController;
 use App\Http\Controllers\ADMIN\AdminBaggageRuleController;
 use App\Http\Controllers\ADMIN\AdminBookingController;
+use App\Http\Controllers\ADMIN\AdminDashboardController;
+use App\Http\Controllers\ADMIN\AdminDiscountController;
 use App\Http\Controllers\ADMIN\AdminFlightsController;
 use App\Http\Controllers\ADMIN\AdminPaymentController;
 use App\Http\Controllers\ADMIN\AdminSeatClassesController;
@@ -85,6 +87,21 @@ Route::prefix('admin')->group(function () {
      Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::post('/tickets', [AdminTicketController::class, 'store']);
     Route::put('/tickets/{id}', [AdminTicketController::class, 'update']);
+
+    Route::get('/dashboard/revenue-by-class', [AdminDashboardController::class, 'revenueByTicketClass']);
+    Route::get('/dashboard/revenue-by-aircraft', [AdminDashboardController::class, 'revenueByAircraft']);
+    Route::get('/dashboard/revenue-by-date', [AdminDashboardController::class, 'revenueByDate']);
+    Route::get('/dashboard/revenue-by-route', [AdminDashboardController::class, 'revenueByRoute']);
+
+      //discounts
+    Route::get('/discounts', [AdminDiscountController::class, 'index']);
+    Route::get('/discounts/{id}', [AdminDiscountController::class, 'show']);
+    Route::post('/discounts', [AdminDiscountController::class, 'store']);
+    Route::put('/discounts/{id}', [AdminDiscountController::class, 'update']);
+    Route::delete('/discounts/{id}', [AdminDiscountController::class, 'destroy']);
+    Route::post('/discounts/validate-code', [AdminDiscountController::class, 'validateCode']);
+    Route::post('/discounts/{id}/apply', [AdminDiscountController::class, 'applyDiscount']);
+    Route::put('/discounts/{id}/change-status', [AdminDiscountController::class, 'changeStatus']);
 });
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{id}', [UserController::class, 'update']);

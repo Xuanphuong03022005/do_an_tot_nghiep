@@ -26,6 +26,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: "airline", name: "Quản lý Sân bay" },
     { id: "bookings", name: "Quản lý Đơn đặt" },
     { id: "users", name: "Quản lý Người dùng" },
+    { id: "Discount", name: "Quản lý Khuyến mãi" },
   ];
 
   return (

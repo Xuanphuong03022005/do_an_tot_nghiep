@@ -8,9 +8,10 @@ import AirlineManager from "./AirlineManager";
 import BookingManager from "./BookingManager";
 import SeatClassManager from "./SeatClassManager";
 import AirportsManager from "./AirportsManager";
-import AirlineTicketManager from "./AirlineTicketManager"; // 1. Import Component mới
-import BaggageManagement from "./BaggageManagement"; // 1. Import Component mới
-import ContentArea from "./ContentArea";
+import AirlineTicketManager from "./AirlineTicketManager";
+import BaggageManagement from "./BaggageManagement";
+import DiscountManager from "./DiscountManager";
+// XÓA DÒNG NÀY: import ContentArea from "./ContentArea";
 import DashboardCharts from "./DashboardCharts";
 
 function AdminDashboard() {
@@ -40,13 +41,15 @@ function AdminDashboard() {
         return <AirportsManager />;
       case "Baggage":
         return <BaggageManagement />;
-
+      case "Discount":
+        return <DiscountManager />;
       case "ticket-classes":
         return <AirlineTicketManager />;
       case "bookings":
         return <BookingManager />;
       default:
-        return <ContentArea activeTab={activeTab} />;
+        // SỬA DÒNG NÀY: Thay vì gọi ContentArea, hãy trả về thông báo mặc định
+        return <div>Chọn một mục trên thanh điều hướng.</div>;
     }
   };
 

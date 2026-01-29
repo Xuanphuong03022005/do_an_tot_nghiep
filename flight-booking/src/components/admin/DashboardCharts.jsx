@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // Hoặc authApi của bạn
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,9 +14,7 @@ import {
   ArcElement,
   Filler,
 } from "chart.js";
-import { Line, Bar, Doughnut } from "react-chartjs-2";
 
-// Đăng ký các thành phần ChartJS
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -29,47 +29,114 @@ ChartJS.register(
 );
 
 const DashboardCharts = () => {
-  // DỮ LIỆU MẪU: Thống kê doanh thu theo ngày
-  const dailyData = {
-    labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
-    datasets: [
-      {
-        label: "Doanh thu ngày (VNĐ)",
-        data: [
-          12000000, 19000000, 15000000, 25000000, 22000000, 30000000, 45000000,
-        ],
-        borderColor: "#3b82f6",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
+  const [chartData, setChartData] = useState({
+    dailyRevenue: null,
+    aircraftActivity: null,
+    ticketClass: null,
+  });
+  const [loading, setLoading] = useState(true);
 
-  // DỮ LIỆU MẪU: Thống kê hãng bay hoạt động nhiều nhất
-  const airlineData = {
-    labels: ["Vietnam Airlines", "Vietjet Air", "Bamboo Airways"],
-    datasets: [
-      {
-        data: [45, 38, 20],
-        backgroundColor: ["#1e3a8a", "#dc2626", "#059669"],
-      },
-    ],
-  };
+  // DashboardCharts.js
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        // Thêm http://localhost:8000 vào trước để trỏ đúng sang máy chủ Laravel
+        const [resDate, resAircraft, resClass] = await Promise.all([
+          axios.get(
+            "http://localhost:8000/api/admin/dashboard/revenue-by-date?type=daily"
+          ),
+          axios.get(
+            "http://localhost:8000/api/admin/dashboard/revenue-by-aircraft"
+          ),
+          axios.get(
+            "http://localhost:8000/api/admin/dashboard/revenue-by-class"
+          ),
+        ]);
 
-  // DỮ LIỆU MẪU: Hạng vé được mua nhiều nhất
-  const classData = {
-    labels: ["Phổ thông", "Thương gia", "Hạng nhất"],
-    datasets: [
-      {
-        label: "Số lượng vé",
-        data: [1200, 300, 50],
-        backgroundColor: ["#fbbf24", "#8b5cf6", "#ec4899"],
-      },
-    ],
-  };
+        // Kiểm tra nếu có dữ liệu mới xử lý để tránh lỗi .map() của undefined
+        if (resDate.data.revenueByDate?.data) {
+          const dailyLabels = resDate.data.revenueByDate.data.map(
+            (item) => item.time
+          );
+          const dailyValues = resDate.data.revenueByDate.data.map(
+            (item) => item.revenue
+          );
+
+          setChartData((prev) => ({
+            ...prev,
+            dailyRevenue: {
+              labels: dailyLabels,
+              datasets: [
+                {
+                  label: "Doanh thu (VNĐ)",
+                  data: dailyValues,
+                  borderColor: "#3b82f6",
+                  backgroundColor: "rgba(59, 130, 246, 0.1)",
+                  fill: true,
+                  tension: 0.4,
+                },
+              ],
+            },
+          }));
+        }
+
+        if (Array.isArray(resAircraft.data?.revenueByAircraft)) {
+          const aircraftLabels = resAircraft.data.revenueByAircraft.map(
+            (item) => item.flight_number || "N/A" // Sửa ở đây
+          );
+          const aircraftValues = resAircraft.data.revenueByAircraft.map(
+            (item) => item.sold_seats || 0
+          );
+
+          setChartData((prev) => ({
+            ...prev,
+            aircraftActivity: {
+              labels: aircraftLabels,
+              datasets: [
+                {
+                  data: aircraftValues,
+                  backgroundColor: ["#1e3a8a", "#dc2626", "#059669", "#fbbf24"],
+                },
+              ],
+            },
+          }));
+        }
+
+        if (resClass.data.revenueByTicketClass) {
+          const classLabels = resClass.data.revenueByTicketClass.map(
+            (item) => item.ticket_class
+          );
+          const classValues = resClass.data.revenueByTicketClass.map(
+            (item) => item.sold_seats
+          );
+
+          setChartData((prev) => ({
+            ...prev,
+            ticketClass: {
+              labels: classLabels,
+              datasets: [
+                {
+                  label: "Số lượng vé",
+                  data: classValues,
+                  backgroundColor: ["#fbbf24", "#8b5cf6", "#ec4899"],
+                },
+              ],
+            },
+          }));
+        }
+      } catch (error) {
+        console.error("Lỗi API chi tiết:", error.response?.data);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllData();
+  }, []);
 
   const options = { responsive: true, maintainAspectRatio: false };
+
+  if (loading) return <div>Đang tải biểu đồ thống kê...</div>;
 
   return (
     <div
@@ -82,21 +149,29 @@ const DashboardCharts = () => {
       }}
     >
       <div className="chart-card shadow">
-        <h4>Doanh thu 7 ngày gần nhất</h4>
+        <h4>Doanh thu theo thời gian</h4>
         <div style={{ height: "300px" }}>
-          <Line data={dailyData} options={options} />
+          {chartData.dailyRevenue && (
+            <Line data={chartData.dailyRevenue} options={options} />
+          )}
         </div>
       </div>
+
       <div className="chart-card shadow">
-        <h4>Tần suất hoạt động hãng bay</h4>
+        <h4>Tỉ lệ vé theo máy bay (Mã tàu bay)</h4>
         <div style={{ height: "300px" }}>
-          <Doughnut data={airlineData} options={options} />
+          {chartData.aircraftActivity && (
+            <Doughnut data={chartData.aircraftActivity} options={options} />
+          )}
         </div>
       </div>
+
       <div className="chart-card shadow" style={{ gridColumn: "span 2" }}>
-        <h4>Hạng vé phổ biến</h4>
+        <h4>Thống kê lượng vé theo hạng ghế</h4>
         <div style={{ height: "300px" }}>
-          <Bar data={classData} options={options} />
+          {chartData.ticketClass && (
+            <Bar data={chartData.ticketClass} options={options} />
+          )}
         </div>
       </div>
     </div>

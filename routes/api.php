@@ -78,11 +78,10 @@ Route::prefix('admin')->group(function () {
     //tickets
     Route::get('/tickets', [AdminTicketController::class, 'index']);
     //dashboard
-    Route::get('/dashboard', [AdminDashboardContrroller::class, 'index']);
-    Route::get('/dashboard/revenue-by-class', [AdminDashboardContrller::class, 'revenueByTicketClass']);
-    Route::get('/dashboard/revenue-by-aircraft', [AdminDashboardContrller::class, 'revenueByAircraft']);
-    Route::get('/dashboard/revenue-by-date', [AdminDashboardContrller::class, 'revenueByDate']);
-    Route::get('/dashboard/revenue-by-route', [AdminDashboardContrller::class, 'revenueByRoute']);
+    Route::get('/dashboard/revenue-by-class', [AdminDashboardContrroller::class, 'revenueByTicketClass']);
+    Route::get('/dashboard/revenue-by-aircraft', [AdminDashboardContrroller::class, 'revenueByAircraft']);
+    Route::get('/dashboard/revenue-by-date', [AdminDashboardContrroller::class, 'revenueByDate']);
+    Route::get('/dashboard/revenue-by-route', [AdminDashboardContrroller::class, 'revenueByRoute']);
     //discounts
     Route::get('/discounts', [AdminDiscountController::class, 'index']);
     Route::get('/discounts/{id}', [AdminDiscountController::class, 'show']);

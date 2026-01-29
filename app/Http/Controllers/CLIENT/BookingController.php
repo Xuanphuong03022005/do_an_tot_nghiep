@@ -14,6 +14,10 @@ use App\Models\Tickets;
 use App\Models\RoundTrip;
 use Exception;
 use Illuminate\Support\Str;
+use App\Mail\BookingConfirmationMail;
+use Illuminate\Support\Facades\Mail;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -51,7 +55,7 @@ class BookingController extends Controller
             'passengers' => $passengers
         ]], 200);
     }
-    
+
     public function store(StoreBookingRequest $request)
     {
         DB::beginTransaction();
@@ -68,14 +72,14 @@ class BookingController extends Controller
                 'discount_id' => $data['discount_id'],
                 'discount_value' => $data['discount_value'],
                 'total_final' => $data['total_final'],
-                'expired_at' =>now()->addMinutes(10),
+                'expired_at' => now()->addMinutes(10),
             ]);
             foreach ($data['tickets'] as $value) {
                 $passengers = $value['passengers'];
                 foreach ($passengers as $passenger) {
                     // Check if passenger is infant (under 2 years old)
                     $isInfant = $passenger['type'] == 'INF';
-                    
+
                     $dataPassenger = Passengers::create([
                         'name' => $passenger['name'],
                         'gender' => $passenger['gender'],
@@ -86,12 +90,12 @@ class BookingController extends Controller
                         'identity_number' => $passenger['identity_number'] ?? null,
                     ]);
                     $ticketOutbound = Tickets::where('flight_id', $data['outbound_flight_id'])->first();
-                    if($ticketOutbound->available_seats <= 0 && !$isInfant){
+                    if ($ticketOutbound->available_seats <= 0 && !$isInfant) {
                         return response()->json(['message' => 'Vé này đã hết. Vui lòng chọn vé khác hoặc chuyến bay khác.'], 400);
                     }
                     // For infants, ticket price is 0
                     $outboundTicketPrice = $isInfant ? 0 : $passenger['total_price'];
-                    
+
                     $bookingTicketOutbound = BookingTickets::create([
                         'booking_id' => $booking->id,
                         'ticket_id' => $value['ticket_id'],
@@ -109,11 +113,11 @@ class BookingController extends Controller
                     }
                     if (isset($data['return_flight_id']) && $data['return_flight_id'] != null) {
                         $ticketReturn = Tickets::where('flight_id', $data['return_flight_id'])->first();
-                        if($ticketReturn->available_seats <= 0 && !$isInfant){
+                        if ($ticketReturn->available_seats <= 0 && !$isInfant) {
                             return response()->json(['message' => 'Vé khứ hồi cho hạng này đã hết. Vui lòng chuyến bay khác.'], 400);
                         }
                         $returnTicketPrice = $isInfant ? 0 : $passenger['total_price'];
-                        
+
                         $bookingTicketReturn = BookingTickets::create([
                             'booking_id' => $booking->id,
                             'total_price' => $returnTicketPrice,
@@ -152,9 +156,32 @@ class BookingController extends Controller
                         }
                     }
                 }
-                DB::commit();
-                return response()->json(['message' => 'Đặt chỗ thành công.', 'data' => [$booking->pnr_code]], 200);
-            }
+
+                }
+                $user = User::find($data['user_id']);
+                if ($user && $user->email) {
+                    $tickets = DB::table('booking_tickets as bt')
+                        ->select('bt.*', 't.price as ticket_price', 's.name as class_name', 'p.name as passenger_name', 'f.flight_number')
+                        ->leftJoin('tickets as t', 'bt.ticket_id', '=', 't.id')
+                        ->leftJoin('seat_classes as s', 't.class_id', '=', 's.id')
+                        ->leftJoin('passengers as p', 'bt.passenger_id', '=', 'p.id')
+                        ->leftJoin('flights as f', 'bt.flight_id', '=', 'f.id')
+                        ->where('bt.booking_id', $booking->id)
+                        ->get();
+
+                    $passengers = Passengers::whereIn('id', $tickets->pluck('passenger_id'))->get();
+
+
+                    Mail::to($user->email)->send(new BookingConfirmationMail(
+                        $booking,
+                        $tickets,
+                        $passengers,
+                        $user->email,
+                        $user->name
+                        ));
+                        }
+            DB::commit();
+            return response()->json(['message' => 'Đặt chỗ thành công.', 'data' => [$booking->pnr_code]], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Đặt chỗ thất bại. ' . $e->getMessage()], 500);
